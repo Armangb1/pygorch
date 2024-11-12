@@ -2,23 +2,23 @@ import numpy as np
 
 class Tensor:
     
-    def __init__(self, value, required_grad:bool = False) -> None:
+    def __init__(self, value, requires_grad:bool = False) -> None:
         if type(value) is not np.ndarray:
             value = np.array(value)
         self.value = value
         self.shape = value.shape
         self.grad = None
-        self.required_grad = required_grad
+        self.requires_grad = requires_grad
         self._grad_fn = None
 
     def backward(self, gradient=None):
-        if not self.required_grad:
+        if not self.requires_grad:
             return
         
         if gradient is None:
             if self.value.shape ==[1] or self.value.shape ==() or self.value.shape ==(1,1) :
                 value = np.ones_like(self.value)
-                gradient = Tensor(value,required_grad=True)
+                gradient = Tensor(value,requires_grad=True)
             else:
                 raise RuntimeError("Gradient argument must be specified for non-scalar tensors.")
                 
@@ -36,7 +36,7 @@ class Tensor:
                     tensor.backward(grad)
 
     def zero_grad(self):
-        if not self.required_grad:
+        if not self.requires_grad:
             return
         
         self.grad = None
@@ -45,126 +45,152 @@ class Tensor:
                 if isinstance(tensor, Tensor):
                     tensor.zero_grad()
 
+    def is_grad_eneable(self):
+        if self.requires_grad:
+            return True
+        else:
+            return False
     
+    def set_grad_disable(self):
+        self.requires_grad = False
+
     def reshape(self, *argv):
         value = self.value.copy()
         try:
             value = value.reshape(argv)
         except ValueError as e:
             raise ValueError(f"Cannot reshape array of size {value.size} into shape {argv}") from e
-        return Tensor(value, self.required_grad)
+        return Tensor(value, self.requires_grad)
     
     def copy(self):
         value = self.value.copy()
-        required_grad = self.required_grad
-        return Tensor(value, required_grad)
+        requires_grad = self.requires_grad
+        return Tensor(value, requires_grad)
         
     def transpose(self):
         value = self.value.copy()
-        c = Tensor(value.T,self.required_grad)
-        c._grad_fn = TransposeBackward(self)
+        c = Tensor(value.T,self.requires_grad)
+        if c.requires_grad:
+            c._grad_fn = TransposeBackward(self)
         return c
     
     def __getitem__(self,idx):
         value = self.value[idx]
-        c = Tensor(value,required_grad=self.required_grad)
-        c._grad_fn = GetItemBackward(self,idx)
+        c = Tensor(value,requires_grad=self.requires_grad)
+        if c.requires_grad:
+            c._grad_fn = GetItemBackward(self,idx)
         return c
     
     def __setitem__(self, key, value):
         self.value[key] =  value
 
     def __neg__(self):
-        c = Tensor(-self.value, required_grad=self.required_grad)
-        c._grad_fn=NegBackward(self)
+        c = Tensor(-self.value, requires_grad=self.requires_grad)
+        if c.requires_grad:
+            c._grad_fn=NegBackward(self)
         return c
     
     def __add__(self, other):
-        if type(other) is not Tensor:
+        if not isinstance(other, Tensor):
             other = Tensor(other)
-        required_grad = self.required_grad or other.required_grad
-        c =  Tensor(self.value+other.value,required_grad=required_grad)
-        c._grad_fn = AddBackward(self, other)
+        requires_grad = self.requires_grad or other.requires_grad
+        c =  Tensor(self.value+other.value,requires_grad=requires_grad)
+        if requires_grad:
+            c._grad_fn = AddBackward(self, other)
         return c
 
     def __sub__(self, other):
-        if type(other) is not Tensor:
+        if not isinstance(other, Tensor):
             other = Tensor(other)
-        required_grad = self.required_grad or other.required_grad
-        c =  Tensor(self.value-other.value,required_grad=required_grad)
-        c._grad_fn = SubBackward(self, other)
+        requires_grad = self.requires_grad or other.requires_grad
+        c =  Tensor(self.value-other.value,requires_grad=requires_grad)
+        if requires_grad:
+            c._grad_fn = SubBackward(self, other)
         return c
+    
     def __mul__(self, other):
-        if type(other) is not Tensor:
+        if not isinstance(other, Tensor):
             other = Tensor(other)
-        
-        required_grad = self.required_grad or other.required_grad
-        c =  Tensor(self.value*other.value,required_grad=required_grad)
-        c._grad_fn = MulBackward(self,other)
+        requires_grad = self.requires_grad or other.requires_grad
+        c =  Tensor(self.value*other.value,requires_grad=requires_grad)
+        if requires_grad:
+            c._grad_fn = MulBackward(self,other)
         return c
     
     def __matmul__(self, other):
-        required_grad = self.required_grad or other.required_grad
-        c =  Tensor(self.value@other.value,required_grad=required_grad)
-        c._grad_fn = MatMulBackward(self,other)
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        requires_grad = self.requires_grad or other.requires_grad
+        c =  Tensor(self.value@other.value,requires_grad=requires_grad)
+        if requires_grad:
+            c._grad_fn = MatMulBackward(self,other)
         return c
     
     def __pow__(self, other):
-        if type(other) is not Tensor:
+        if not isinstance(other, Tensor):
             other = Tensor(other)
-        required_grad = self.required_grad
-        c =  Tensor(self.value**other.value,required_grad=required_grad)
-        c._grad_fn = PowBackward(self, other)
+        requires_grad = self.requires_grad
+        c =  Tensor(self.value**other.value,requires_grad=requires_grad)
+        if requires_grad:
+            c._grad_fn = PowBackward(self, other)
         return c
     
     def dot(self, other):
-        required_grad = self.required_grad or other.required_grad
+        requires_grad = self.requires_grad or other.requires_grad
         value = self.value.dot(other.value)
-        c = Tensor(value, required_grad)
-        c._grad_fn = DotBackward(self, other)
+        c = Tensor(value, requires_grad)
+        if requires_grad:
+            c._grad_fn = DotBackward(self, other)
         return c
+    
     def sin(self):
-        required_grad = self.required_grad
+        requires_grad = self.requires_grad
         value = np.sin(self.value)
-        c =  Tensor(value,required_grad=required_grad)
-        c._grad_fn = SinBackward(self)
+        c =  Tensor(value,requires_grad=requires_grad)
+        if requires_grad:
+            c._grad_fn = SinBackward(self)
         return c
 
     def cos(self):
-        required_grad = self.required_grad
+        requires_grad = self.requires_grad
         value = np.cos(self.value)
-        c =  Tensor(value,required_grad=required_grad)
-        c._grad_fn = CosBackward(self)
+        c =  Tensor(value,requires_grad=requires_grad)
+        if requires_grad:
+            c._grad_fn = CosBackward(self)
         return c
 
     def relu(self):
-        required_grad = self.required_grad
+        requires_grad = self.requires_grad
         value = self.value.copy()
         value=value*(value>0)
-        c =  Tensor(value,required_grad=required_grad)
-        c._grad_fn = ReLuBackward(self)
+        c =  Tensor(value,requires_grad=requires_grad)
+        if requires_grad:
+            c._grad_fn = ReLuBackward(self)
         return c
 
     def tanh(self):
-        required_grad = self.required_grad
+        requires_grad = self.requires_grad
         value = np.tanh(self.value)
-        c =  Tensor(value,required_grad=required_grad)
-        c._grad_fn = TanhBackward(self)
+        c =  Tensor(value,requires_grad=requires_grad)
+        if requires_grad:
+            c._grad_fn = TanhBackward(self)
         return c
 
 
     def sigmoid(self):
-        required_grad = self.required_grad
+        requires_grad = self.requires_grad
         value = 1/(1+np.exp(-self.value))
-        c =  Tensor(value,required_grad=required_grad)
-        c._grad_fn = SigmoidBackward(self)
+        c =  Tensor(value,requires_grad=requires_grad)
+        if requires_grad:
+            c._grad_fn = SigmoidBackward(self)
         return c
     
     def step(self):
-        required_grad = self.required_grad
+        requires_grad = self.requires_grad
         value = self.value.copy()
         value = np.heaviside(value,0)
-        c =  Tensor(value,required_grad=required_grad)
+        if requires_grad:
+            c =  Tensor(value,requires_grad=requires_grad)
         return c
 
     def sum(self , axis=None, keepdims=False):
@@ -184,7 +210,7 @@ class Tensor:
             raise ValueError("Input must be a Tensor")
         
         value = np.sum(self.value, axis=axis, keepdims=keepdims)
-        return Tensor(value, required_grad=self.required_grad)
+        return Tensor(value, requires_grad=self.requires_grad)
 
     
     def __repr__(self) -> str:
@@ -195,11 +221,6 @@ class Tensor:
     def diag(cls, input):
         value = np.diag(input.value)
         return cls(value)
-
-
-
-
-
 
 
 
@@ -218,10 +239,11 @@ class AddBackward:
         while len(grad_y.shape) > len(y.shape):
             grad_y = grad_y.sum(axis=0)
 
-        for axis, (dim_x, dim_y) in enumerate(zip(x.shape, y.shape)):
-            if dim_x == 1:
+        for axis in range(-1, -len(x.shape) - 1, -1):
+            if x.shape[axis] == 1:
                 grad_x = grad_x.sum(axis=axis, keepdims=True)
-            if dim_y == 1:
+        for axis in range(-1, -len(y.shape) - 1, -1):
+            if y.shape[axis] == 1:
                 grad_y = grad_y.sum(axis=axis, keepdims=True)
 
         return [grad_x.transpose(), grad_y.transpose()]
@@ -260,7 +282,7 @@ class GetItemBackward:
         grad = np.zeros_like(self.input[0].value)
         np.add.at(grad, self.idx, gradient.value)
         return [Tensor(grad)]
-
+    
 
 class MulBackward:
     def __init__(self, x: Tensor, y: Tensor) -> None:
@@ -268,23 +290,23 @@ class MulBackward:
 
     def backward(self, gradient: Tensor) -> list:
         x, y = self.input
-        grad_x = gradient * y
-        grad_y = gradient * x
+        gradient = gradient.transpose()
+        grad_x = gradient*y
+        grad_y = gradient*x
+        # Handle broadcasting
+        while len(grad_x.shape) > len(x.shape):
+            grad_x = grad_x.sum(axis=0)
+        while len(grad_y.shape) > len(y.shape):
+            grad_y = grad_y.sum(axis=0)
 
-        # Handle broadcasting for grad_x
-        if grad_x.shape != x.shape:
-            grad_x = grad_x.sum(axis=tuple(range(len(grad_x.shape) - len(x.shape))))
-            for axis, (dim_x, dim_y) in enumerate(zip(x.shape, y.shape)):
-                if dim_x == 1:
-                    grad_x = grad_x.sum(axis=axis, keepdims=True)
-
-        # Handle broadcasting for grad_y
-        if grad_y.shape != y.shape:
-            grad_y = grad_y.sum(axis=tuple(range(len(grad_y.shape) - len(y.shape))))
-            for axis, (dim_x, dim_y) in enumerate(zip(x.shape, y.shape)):
-                if dim_y == 1:
-                    grad_y = grad_y.sum(axis=axis, keepdims=True)
-
+        for axis in range(-1, -len(x.shape) - 1, -1):
+            if x.shape[axis] == 1:
+                grad_x = grad_x.sum(axis=axis, keepdims=True)
+        for axis in range(-1, -len(y.shape) - 1, -1):
+            if y.shape[axis] == 1:
+                grad_y = grad_y.sum(axis=axis, keepdims=True)
+        grad_x = grad_x.transpose()
+        grad_y = grad_y.transpose()
         return [grad_x, grad_y]
     
     
