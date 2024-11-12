@@ -45,16 +45,16 @@ result.backward()
 Here is an example of how to use Gorch in a simple neural network:
 
 ```py
-import gorch
+from pygorch import gorch
 import numpy as np
 
 # Generate random input and output data
 input = np.random.randn(1, 5)
 output = np.random.randn()
 
-# Create input tensor
+# Create input and output tensor
 x = gorch.Tensor(input)
-
+y = gorch.Tensor(output)
 # Initialize weights and biases
 W1_d = np.random.randn(5, 1)
 b1_d = np.random.randn(1, 1)
@@ -69,7 +69,7 @@ O1 = net1.tanh()
 e = output - O1
 
 # Compute cost
-cost = e.transpose() @ e
+cost = e.transpose()@e
 
 # Backward pass
 cost.backward()
