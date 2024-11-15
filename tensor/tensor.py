@@ -416,4 +416,37 @@ class TransposeBackward:
         return grad
 
 
+class MaximumBackward:
+    def __init__(self, x:Tensor, y:Tensor) -> None:
+        self.input = [x, y]
+
+    def backward(self, gradient:Tensor):
+        x = self.input[0]
+        y = self.input[1]
+        grad_x = x.value>y.value
+        grad_y = ~grad_x
+        grad_x = grad_x.astype(float)
+        grad_y = grad_y.astype(float)
+        grad_x = Tensor(np.diag(grad_x))
+        grad_y = Tensor(np.diag(grad_y))
+        
+        grad = [gradient.dot(grad_x),gradient.dot(grad_y)]
+        return grad
+    
+class MinimumBackward:
+    def __init__(self, x:Tensor, y:Tensor) -> None:
+        self.input = [x, y]
+
+    def backward(self, gradient:Tensor):
+        x = self.input[0]
+        y = self.input[1]
+        grad_x = x.value<y.value
+        grad_y = ~grad_x
+        grad_x = grad_x.astype(float)
+        grad_y = grad_y.astype(float)
+        grad_x = Tensor(np.diag(grad_x))
+        grad_y = Tensor(np.diag(grad_y))
+        
+        grad = [gradient.dot(grad_x),gradient.dot(grad_y)]
+        return grad
 
