@@ -1,9 +1,11 @@
 from .tensor import Tensor as Tensor
 from .methods import *
 
-
 __all__ = [
     "diag",
+    "eye",
+    "ones",
+    "zeros",
     "sum",
     "ones_like",
     "tanh",
@@ -13,5 +15,8 @@ __all__ = [
     "sin",
     "cos",
     "tan",
+    "sigmoid",
+    "relu",
+    "step",
     "Tensor"
 ]

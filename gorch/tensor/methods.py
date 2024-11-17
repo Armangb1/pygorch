@@ -17,6 +17,51 @@ def diag(tensor:Tensor) -> Tensor:
     value = np.diag(tensor.value)
     return Tensor(value, requires_grad=tensor.requires_grad)
 
+def eye(n: int, m: int = None, requires_grad: bool = False) -> Tensor:
+    """
+    Creates a 2-D tensor with ones on the diagonal and zeros elsewhere.
+    
+    Args:
+    n (int): Number of rows in the output tensor.
+    m (int, optional): Number of columns in the output tensor. If None, defaults to n.
+    requires_grad (bool, optional): If autograd should record operations on the returned tensor.
+    
+    Returns:
+    Tensor: A 2-D tensor with ones on the diagonal and zeros elsewhere.
+    """
+    if m is None:
+        m = n
+    
+    value = np.eye(n, m)
+    return Tensor(value, requires_grad=requires_grad)
+
+def ones(*shape, requires_grad=False) -> Tensor:
+    """
+    Creates a tensor filled with ones.
+    
+    Args:
+    shape (int...): Dimensions of the output tensor.
+    requires_grad (bool, optional): If autograd should record operations on the returned tensor.
+    
+    Returns:
+    Tensor: A tensor filled with ones.
+    """
+    value = np.ones(shape)
+    return Tensor(value, requires_grad=requires_grad)
+
+def zeros(*shape, requires_grad=False) -> Tensor:
+    """
+    Creates a tensor filled with zeros.
+    
+    Args:
+    shape (int...): Dimensions of the output tensor.
+    requires_grad (bool, optional): If autograd should record operations on the returned tensor.
+    
+    Returns:
+    Tensor: A tensor filled with zeros.
+    """
+    value = np.zeros(shape)
+    return Tensor(value, requires_grad=requires_grad)
 
 def sum(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
     """
