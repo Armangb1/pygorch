@@ -1,8 +1,5 @@
 import numpy as np
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from tensor import Tensor
+from ..tensor import Tensor
 
 class Parameter(Tensor):
     def __init__(self, shape) -> None:

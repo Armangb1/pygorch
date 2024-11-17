@@ -1,11 +1,8 @@
 from abc import ABC
-import os
 import pickle
 import inspect
 
-
-import sys
-from nn.parameter import Parameter
+from ..parameter import Parameter
 
 
 class Module(ABC):
