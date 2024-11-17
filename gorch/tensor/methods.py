@@ -1,6 +1,6 @@
 from .tensor import Tensor
 import numpy as np
-
+from .backward import *
 def diag(tensor:Tensor) -> Tensor:
     """
     Takes a tensor object and returns a diagonalized tensor.
@@ -15,7 +15,7 @@ def diag(tensor:Tensor) -> Tensor:
         raise ValueError("Input must be a Tensor")
     
     value = np.diag(tensor.value)
-    return Tensor(value, required_grad=tensor.required_grad)
+    return Tensor(value, requires_grad=tensor.requires_grad)
 
 
 def sum(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
@@ -35,7 +35,7 @@ def sum(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
         raise ValueError("Input must be a Tensor")
     
     value = np.sum(tensor.value, axis=axis, keepdims=keepdims)
-    return Tensor(value, required_grad=tensor.required_grad)
+    return Tensor(value, requires_grad=tensor.requires_grad)
 
 
 def ones_like(tensor: Tensor) -> Tensor:
@@ -52,7 +52,7 @@ def ones_like(tensor: Tensor) -> Tensor:
         raise ValueError("Input must be a Tensor")
     
     value = np.ones_like(tensor.value)
-    return Tensor(value, required_grad=tensor.required_grad)
+    return Tensor(value, requires_grad=tensor.requires_grad)
 
 def exp(tensor: Tensor) -> Tensor:
     """
@@ -68,7 +68,10 @@ def exp(tensor: Tensor) -> Tensor:
         raise ValueError("Input must be a Tensor")
     
     value = np.exp(tensor.value)
-    return Tensor(value, required_grad=tensor.required_grad)
+    out = Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = ExpBackward(tensor)
+    return out
 
 
 
@@ -86,7 +89,10 @@ def tanh(tensor: Tensor) -> Tensor:
         raise ValueError("Input must be a Tensor")
     
     value = np.tanh(tensor.value)
-    return Tensor(value, required_grad=tensor.required_grad)
+    out = Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = TanhBackward(tensor)
+    return out
 
 def sinh(tensor: Tensor) -> Tensor:
     """
@@ -102,7 +108,10 @@ def sinh(tensor: Tensor) -> Tensor:
         raise ValueError("Input must be a Tensor")
     
     value = np.sinh(tensor.value)
-    return Tensor(value, required_grad=tensor.required_grad)
+    out = Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = SinhBackward
+    return out
 
 def cosh(tensor: Tensor) -> Tensor:
     """
@@ -118,7 +127,10 @@ def cosh(tensor: Tensor) -> Tensor:
         raise ValueError("Input must be a Tensor")
     
     value = np.cosh(tensor.value)
-    return Tensor(value, required_grad=tensor.required_grad)
+    out = Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = CoshBackward(tensor)
+    return out
 
 
 
@@ -136,7 +148,10 @@ def cos(tensor: Tensor) -> Tensor:
         raise ValueError("Input must be a Tensor")
     
     value = np.cos(tensor.value)
-    return Tensor(value, required_grad=tensor.required_grad)
+    out = Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = CosBackward(tensor)
+    return out
 
 def sin(tensor: Tensor) -> Tensor:
     """
@@ -152,7 +167,10 @@ def sin(tensor: Tensor) -> Tensor:
         raise ValueError("Input must be a Tensor")
     
     value = np.sin(tensor.value)
-    return Tensor(value, required_grad=tensor.required_grad)
+    out = Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = ReLuBackward(tensor)
+    return out
 
 
 def tan(tensor: Tensor) -> Tensor:
@@ -169,7 +187,10 @@ def tan(tensor: Tensor) -> Tensor:
         raise ValueError("Input must be a Tensor")
     
     value = np.tan(tensor.value)
-    return Tensor(value, required_grad=tensor.required_grad)
+    out = Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = TanBackward(tensor)
+    return out
 
 def sigmoid(tensor: Tensor) -> Tensor:
     """
@@ -185,7 +206,10 @@ def sigmoid(tensor: Tensor) -> Tensor:
         raise ValueError("Input must be a Tensor")
     
     value = 1 / (1 + np.exp(-tensor.value))
-    return Tensor(value, required_grad=tensor.required_grad)
+    out = Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = SigmoidBackward(tensor)
+    return out
 
 def relu(tensor: Tensor) -> Tensor:
     """
@@ -201,7 +225,10 @@ def relu(tensor: Tensor) -> Tensor:
         raise ValueError("Input must be a Tensor")
     
     value = np.maximum(0, tensor.value)
-    return Tensor(value, required_grad=tensor.required_grad)
+    out = Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = ReLuBackward(tensor)
+    return out
 
 def step(tensor: Tensor) -> Tensor:
     """
@@ -217,4 +244,4 @@ def step(tensor: Tensor) -> Tensor:
         raise ValueError("Input must be a Tensor")
     
     value = np.where(tensor.value > 0, 1, 0)
-    return Tensor(value, required_grad=tensor.required_grad)
+    return Tensor(value, requires_grad=tensor.requires_grad)
