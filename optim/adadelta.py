@@ -3,30 +3,31 @@ from .optimizer import Optimizer
 import numpy as np 
 class Adadelta(Optimizer):
     
-    def __init__(self, rho = 0.9, eps = 1e-8, lr = 1):
-        super().__init__()
+    def __init__(self, parameters, rho = 0.9, eps = 1e-8, lr = 1):
+        super().__init__(parameters)
 
         self.rho = rho
         self.lr = lr
-        self.v = 0
-        self.u = 0
         self.eps = eps
+        self.v = [np.zeros_like(p.value) for p in self.parameters]
+        self.u = [np.zeros_like(p.value) for p in self.parameters]
 
-    def step(self, var, vargrad):
+
+    def step(self):
         
-        v = self.v
-        u = self.u
         lr = self.lr
         rho = self.rho
         eps = self.eps
         
-        v = rho*v + (1-rho)*vargrad**2
-        
-        self.v = v
+        for i, param in enumerate(self.parameters):
+            v = self.v[i]
+            v = rho*v + (1-rho)*param.grad.value**2
+            self.v[i] = v
 
-        dw = np.sqrt(u+eps)/np.sqrt(v+eps) *vargrad
+            u = self.u[i]
 
-        u = rho*u + (1-rho)*dw**2
-        var = var - lr*dw
+            dw = np.sqrt(u+eps)/np.sqrt(v+eps) *param.grad.value
 
-        return var
+            u = rho*u + (1-rho)*dw**2
+            self.u[i] = u
+            param.value-= lr*dw

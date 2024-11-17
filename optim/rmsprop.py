@@ -3,25 +3,23 @@ import numpy as np
 
 class RMSprop(Optimizer):
     
-    def __init__(self, lr = 0.001, alpha = 0.99, eps = 1e-8):
-        super().__init__()
-
+    def __init__(self, parameters, lr = 0.001, alpha = 0.99, eps = 1e-8):
+        super().__init__(parameters)
         self.lr = lr
         self.alpha = alpha
-        self.v = 0
+        self.v = [np.zeros_like(p.value) for p in self.parameters]
         self.eps = eps
 
-    def step(self, var, vargrad):
-        
+    def step(self):
         lr = self.lr
-        v = self.v
         alpha = self.alpha
         eps = self.eps
+        for i, param in enumerate(self.parameters):
 
-        v = alpha*v + (1-alpha)*vargrad**2
+            v = self.v[i]
 
-        self.v = v
+            v = alpha*v + (1-alpha)*param.grad.value
 
-        var = var - lr/(np.sqrt(v)+eps)*vargrad
+            self.v[i] = v
 
-        return var
+            param.value -= lr/(np.sqrt(v)+eps)*param.grad.value

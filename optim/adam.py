@@ -2,19 +2,19 @@ from .optimizer import Optimizer
 import numpy as np
 
 class Adam(Optimizer):
-    def __init__(self, lr=0.001, betas = (0.9, 0.999), eps = 1e-8):
-        self.m = 0
-        self.v = 0
+    def __init__(self, parameters, lr=0.001, betas = (0.9, 0.999), eps = 1e-8):
+        super().__init__(parameters)
+        self.m = [np.zeros_like(p.value) for p in self.parameters]
+        self.v = [np.zeros_like(p.value) for p in self.parameters]
         self.lr = lr
         self.betas = betas
         self.eps = eps
         self.k = 0
 
         
-    def step(self, var, vargrad):
+    def step(self):
         self.k = self.k+1
-        m = self.m
-        v = self.v 
+
         lr = self.lr 
         betas = self.betas 
         eps = self.eps 
@@ -22,18 +22,20 @@ class Adam(Optimizer):
         beta1 = betas[0]
         beta2 = betas[1]
         
-        m = beta1*m + (1-beta1)*vargrad
-        self.m = m
+        for i, param in enumerate(self.parameters):
+            m = self.m[i]
+            v = self.v[i]
+            m = beta1*m + (1-beta1)*param.grad.value
+            self.m[i] = m
 
-        v = beta2*v + (1-beta2)*vargrad**2
-        self.v = v
+            v = beta2*v + (1-beta2)*param.grad.value
+            self.v[i] = v
 
-        m = m/(1-beta1**self.k)
-        v = v/(1-beta2**self.k)
+            m_hat = m/(1-beta1**self.k)
+            v_hat = v/(1-beta2**self.k)
 
-        var = var - lr/(np.sqrt(v)+eps) * m
+            param.value -= lr/(np.sqrt(v_hat)+eps) * m_hat
 
-        return var
 
 
 
