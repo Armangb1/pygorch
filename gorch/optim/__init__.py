@@ -11,6 +11,20 @@ from .amsgrad import AMSGrad as AMSGrad
 from .nestrov import Nestrov as Nestrov
 from .pid import PID as PID
 
+
+del optimizer  
+del adadelta  
+del adagrad  
+del adam  
+del rmsprop  
+del sgd  
+del sgdm
+del adamax  
+del nadam  
+del amsgrad
+del nestrov  
+del pid  
+
 __all__ = [
     "Optimizer",
     "Adadelta",
