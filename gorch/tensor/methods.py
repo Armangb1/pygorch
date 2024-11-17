@@ -1,6 +1,8 @@
 from .tensor import Tensor
 import numpy as np
 from .backward import *
+
+
 def diag(tensor:Tensor) -> Tensor:
     """
     Takes a tensor object and returns a diagonalized tensor.
@@ -62,6 +64,125 @@ def zeros(*shape, requires_grad=False) -> Tensor:
     """
     value = np.zeros(shape)
     return Tensor(value, requires_grad=requires_grad)
+
+def rand(*shape, requires_grad=False) -> Tensor:
+    """
+    Creates a tensor filled with random values from a uniform distribution over [0, 1).
+    
+    Args:
+    shape (int...): Dimensions of the output tensor.
+    requires_grad (bool, optional): If autograd should record operations on the returned tensor.
+    
+    Returns:
+    Tensor: A tensor filled with random values from a uniform distribution over [0, 1).
+    """
+    value = np.random.rand(*shape)
+    return Tensor(value, requires_grad=requires_grad)
+
+def randn(*shape, requires_grad=False) -> Tensor:
+    """
+    Creates a tensor filled with random values from a standard normal distribution.
+    
+    Args:
+    shape (int...): Dimensions of the output tensor.
+    requires_grad (bool, optional): If autograd should record operations on the returned tensor.
+    
+    Returns:
+    Tensor: A tensor filled with random values from a standard normal distribution.
+    """
+    value = np.random.randn(*shape)
+    return Tensor(value, requires_grad=requires_grad)
+
+def rand_like(tensor: Tensor, requires_grad=False) -> Tensor:
+    """
+    Takes a tensor object and returns a tensor with the same shape filled with random values from a uniform distribution over [0, 1).
+    
+    Args:
+    tensor (Tensor): The input tensor to create a random tensor from.
+    requires_grad (bool, optional): If autograd should record operations on the returned tensor.
+    
+    Returns:
+    Tensor: A tensor filled with random values from a uniform distribution over [0, 1) with the same shape as the input tensor.
+    """
+    if not isinstance(tensor, Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.random.rand(*tensor.shape)
+    return Tensor(value, requires_grad=requires_grad)
+
+def randn_like(tensor: Tensor, requires_grad=False) -> Tensor:
+    """
+    Takes a tensor object and returns a tensor with the same shape filled with random values from a standard normal distribution.
+    
+    Args:
+    tensor (Tensor): The input tensor to create a random tensor from.
+    requires_grad (bool, optional): If autograd should record operations on the returned tensor.
+    
+    Returns:
+    Tensor: A tensor filled with random values from a standard normal distribution with the same shape as the input tensor.
+    """
+    if not isinstance(tensor, Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.random.randn(*tensor.shape)
+    return Tensor(value, requires_grad=requires_grad)
+
+def mean(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
+    """
+    Takes a tensor object and returns the mean of its elements along the specified axis.
+    
+    Args:
+    tensor (Tensor): The input tensor whose elements are to be averaged.
+    axis (int or tuple of ints, optional): Axis or axes along which a mean is performed. 
+                                            The default, axis=None, will compute the mean of all the elements of the input tensor.
+    keepdims (bool, optional): If True, the axes which are reduced are left in the result as dimensions with size one.
+    
+    Returns:
+    Tensor: A tensor containing the mean of the elements along the specified axis.
+    """
+    if not isinstance(tensor, Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.mean(tensor.value, axis=axis, keepdims=keepdims)
+    return Tensor(value, requires_grad=tensor.requires_grad)
+
+def var(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
+    """
+    Takes a tensor object and returns the variance of its elements along the specified axis.
+    
+    Args:
+    tensor (Tensor): The input tensor whose elements' variance is to be computed.
+    axis (int or tuple of ints, optional): Axis or axes along which a variance is performed. 
+                                            The default, axis=None, will compute the variance of all the elements of the input tensor.
+    keepdims (bool, optional): If True, the axes which are reduced are left in the result as dimensions with size one.
+    
+    Returns:
+    Tensor: A tensor containing the variance of the elements along the specified axis.
+    """
+    if not isinstance(tensor, Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.var(tensor.value, axis=axis, keepdims=keepdims)
+    return Tensor(value, requires_grad=tensor.requires_grad)
+
+def median(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
+    """
+    Takes a tensor object and returns the median of its elements along the specified axis.
+    
+    Args:
+    tensor (Tensor): The input tensor whose elements' median is to be computed.
+    axis (int or tuple of ints, optional): Axis or axes along which a median is performed. 
+                                            The default, axis=None, will compute the median of all the elements of the input tensor.
+    keepdims (bool, optional): If True, the axes which are reduced are left in the result as dimensions with size one.
+    
+    Returns:
+    Tensor: A tensor containing the median of the elements along the specified axis.
+    """
+    if not isinstance(tensor, Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.median(tensor.value, axis=axis, keepdims=keepdims)
+    return Tensor(value, requires_grad=tensor.requires_grad)
 
 def sum(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
     """
@@ -290,3 +411,43 @@ def step(tensor: Tensor) -> Tensor:
     
     value = np.where(tensor.value > 0, 1, 0)
     return Tensor(value, requires_grad=tensor.requires_grad)
+
+def maximum(input: Tensor, other: Tensor) -> Tensor:
+    """
+    Takes two tensor objects and returns a tensor with the element-wise maximum.
+    
+    Args:
+    input (Tensor): The first input tensor.
+    other (Tensor): The second input tensor.
+    
+    Returns:
+    Tensor: A tensor with the element-wise maximum.
+    """
+    if not isinstance(input, Tensor) or not isinstance(other, Tensor):
+        raise ValueError("Inputs must be Tensors")
+    
+    value = np.maximum(input.value, other.value)
+    out = Tensor(value, requires_grad=input.requires_grad or other.requires_grad)
+    if out.requires_grad:
+        out._grad_fn = MaximumBackward(input, other)
+    return out
+
+def minimum(input: Tensor, other: Tensor) -> Tensor:
+    """
+    Takes two tensor objects and returns a tensor with the element-wise minimum.
+    
+    Args:
+    input (Tensor): The first input tensor.
+    other (Tensor): The second input tensor.
+    
+    Returns:
+    Tensor: A tensor with the element-wise minimum.
+    """
+    if not isinstance(input, Tensor) or not isinstance(other, Tensor):
+        raise ValueError("Inputs must be Tensors")
+    
+    value = np.minimum(input.value, other.value)
+    out = Tensor(value, requires_grad=input.requires_grad or other.requires_grad)
+    if out.requires_grad:
+        out._grad_fn = MinimumBackward(input, other)
+    return out
