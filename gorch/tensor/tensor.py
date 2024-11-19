@@ -1,9 +1,12 @@
 import numpy as np
 from .backward import *
+import gorch.tensor.methods as methods
+
+
 class Tensor:
     
     def __init__(self, value, requires_grad:bool = False) -> None:
-        if type(value) is not np.ndarray:
+        if not isinstance(value, np.ndarray):
             value = np.array(value)
         self.value = value
         self.shape = value.shape
@@ -35,44 +38,7 @@ class Tensor:
                 if isinstance(tensor, Tensor):
                     tensor.backward(grad)
 
-    def zero_grad(self):
-        if not self.requires_grad:
-            return
-        
-        self.grad = None
-        if self._grad_fn is not None:
-            for tensor in self._grad_fn.input:
-                if isinstance(tensor, Tensor):
-                    tensor.zero_grad()
-
-    def is_grad_eneable(self):
-        if self.requires_grad:
-            return True
-        else:
-            return False
     
-    def set_grad_disable(self):
-        self.requires_grad = False
-
-    def reshape(self, *argv):
-        value = self.value.copy()
-        try:
-            value = value.reshape(argv)
-        except ValueError as e:
-            raise ValueError(f"Cannot reshape array of size {value.size} into shape {argv}") from e
-        return Tensor(value, self.requires_grad)
-    
-    def copy(self):
-        value = self.value.copy()
-        requires_grad = self.requires_grad
-        return Tensor(value, requires_grad)
-        
-    def transpose(self):
-        value = self.value.copy()
-        c = Tensor(value.T,self.requires_grad)
-        if c.requires_grad:
-            c._grad_fn = TransposeBackward(self)
-        return c
     
     def __getitem__(self,idx):
         value = self.value[idx]
@@ -98,6 +64,9 @@ class Tensor:
         if requires_grad:
             c._grad_fn = AddBackward(self, other)
         return c
+    
+    def __radd__(self, other):
+        return self.__add__(other)
 
     def __sub__(self, other):
         if not isinstance(other, Tensor):
@@ -134,93 +103,53 @@ class Tensor:
         if requires_grad:
             c._grad_fn = PowBackward(self, other)
         return c
-    
+
+    def copy(self):
+        value = self.value.copy()
+        requires_grad = self.requires_grad
+        return Tensor(value, requires_grad)
+        
+    def reshape(self, *argv):
+        return methods.reshape(self, argv)
+
+    def transpose(self):
+        return methods.transpose(self)
+
     def dot(self, other):
-        requires_grad = self.requires_grad or other.requires_grad
-        value = self.value.dot(other.value)
-        c = Tensor(value, requires_grad)
-        if requires_grad:
-            c._grad_fn = DotBackward(self, other)
-        return c
+        return methods.dot(self, other)
     
     def sin(self):
-        requires_grad = self.requires_grad
-        value = np.sin(self.value)
-        c =  Tensor(value,requires_grad=requires_grad)
-        if requires_grad:
-            c._grad_fn = SinBackward(self)
-        return c
+        return methods.sin(self)
 
     def cos(self):
-        requires_grad = self.requires_grad
-        value = np.cos(self.value)
-        c =  Tensor(value,requires_grad=requires_grad)
-        if requires_grad:
-            c._grad_fn = CosBackward(self)
-        return c
+        return methods.cos(self)
 
+    def tan(self):
+        return methods.tan(self)
+    
+    def exp(self):
+        return methods.exp(self)
+    
     def relu(self):
-        requires_grad = self.requires_grad
-        value = self.value.copy()
-        value=value*(value>0)
-        c =  Tensor(value,requires_grad=requires_grad)
-        if requires_grad:
-            c._grad_fn = ReLuBackward(self)
-        return c
+        return methods.relu(self)
 
+    def sinh(self):
+        return methods.sinh(self)
+    
+    def cosh(self):
+        return methods.cosh(self)
+    
     def tanh(self):
-        requires_grad = self.requires_grad
-        value = np.tanh(self.value)
-        c =  Tensor(value,requires_grad=requires_grad)
-        if requires_grad:
-            c._grad_fn = TanhBackward(self)
-        return c
-
+        return methods.tanh(self)
 
     def sigmoid(self):
-        requires_grad = self.requires_grad
-        value = 1/(1+np.exp(-self.value))
-        c =  Tensor(value,requires_grad=requires_grad)
-        if requires_grad:
-            c._grad_fn = SigmoidBackward(self)
-        return c
+        return methods.sigmoid(self)
     
     def step(self):
-        requires_grad = self.requires_grad
-        value = self.value.copy()
-        value = np.heaviside(value,0)
-        if requires_grad:
-            c =  Tensor(value,requires_grad=requires_grad)
-        return c
-
+        return methods.step(self)
+    
     def sum(self , axis=None, keepdims=False):
-        """
-        Takes a tensor object and returns the sum of its elements along the specified axis.
-        
-        Args:
-        tensor (Tensor): The input tensor whose elements are to be summed.
-        axis (int or tuple of ints, optional): Axis or axes along which a sum is performed. 
-                                                The default, axis=None, will sum all of the elements of the input tensor.
-        keepdims (bool, optional): If True, the axes which are reduced are left in the result as dimensions with size one.
-        
-        Returns:
-        Tensor: A tensor containing the sum of the elements along the specified axis.
-        """
-        if not isinstance(self, Tensor):
-            raise ValueError("Input must be a Tensor")
-        
-        value = np.sum(self.value, axis=axis, keepdims=keepdims)
-        return Tensor(value, requires_grad=self.requires_grad)
-
+        return methods.sum(self, axis, keepdims)
     
     def __repr__(self) -> str:
         return f"Tensor({self.value})"
-    
-
-    @classmethod
-    def diag(cls, input):
-        value = np.diag(input.value)
-        return cls(value)
-
-
-
