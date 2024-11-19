@@ -2,6 +2,45 @@ from .tensor import Tensor
 import numpy as np
 from .backward import *
 
+def transpose(tensor: Tensor, axes=None) -> Tensor:
+    """
+    Takes a tensor object and returns a transposed tensor.
+    
+    Args:
+    tensor (Tensor): The input tensor to be transposed.
+    axes (tuple of ints, optional): By default, reverse the dimensions, otherwise permute the axes according to the values given.
+    
+    Returns:
+    Tensor: The transposed tensor.
+    """
+    if not isinstance(tensor, Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.transpose(tensor.value, axes=axes)
+    out = Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = TransposeBackward(tensor, axes)
+    return out
+
+def dot(tensor1: Tensor, tensor2: Tensor) -> Tensor:
+    """
+    Takes two tensor objects and returns their dot product.
+    
+    Args:
+    tensor1 (Tensor): The first input tensor.
+    tensor2 (Tensor): The second input tensor.
+    
+    Returns:
+    Tensor: The dot product of the input tensors.
+    """
+    if not isinstance(tensor1, Tensor) or not isinstance(tensor2, Tensor):
+        raise ValueError("Inputs must be Tensors")
+    
+    value = np.dot(tensor1.value, tensor2.value)
+    out = Tensor(value, requires_grad=tensor1.requires_grad or tensor2.requires_grad)
+    if out.requires_grad:
+        out._grad_fn = DotBackward(tensor1, tensor2)
+    return out
 
 def diag(tensor:Tensor) -> Tensor:
     """
@@ -335,7 +374,7 @@ def sin(tensor: Tensor) -> Tensor:
     value = np.sin(tensor.value)
     out = Tensor(value, requires_grad=tensor.requires_grad)
     if tensor.requires_grad:
-        out._grad_fn = ReLuBackward(tensor)
+        out._grad_fn = SinBackward(tensor)
     return out
 
 
