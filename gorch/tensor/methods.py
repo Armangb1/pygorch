@@ -39,7 +39,7 @@ def transpose(tensor: 'Tensor', axes=None) -> 'Tensor':
     value = np.transpose(tensor.value, axes=axes)
     out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
     if tensor.requires_grad:
-        out._grad_fn = TransposeBackward(tensor, axes)
+        out._grad_fn = TransposeBackward(tensor)
     return out
 
 def dot(tensor1: 'Tensor', tensor2: 'Tensor') -> 'Tensor':
@@ -203,7 +203,10 @@ def mean(tensor: 'Tensor', axis=None, keepdims=False) -> 'Tensor':
         raise ValueError("Input must be a Tensor")
     
     value = np.mean(tensor.value, axis=axis, keepdims=keepdims)
-    return gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = MeanBackward(tensor,axis,keepdims)
+    return out
 
 def var(tensor: 'Tensor', axis=None, keepdims=False) -> 'Tensor':
     """
@@ -222,7 +225,8 @@ def var(tensor: 'Tensor', axis=None, keepdims=False) -> 'Tensor':
         raise ValueError("Input must be a Tensor")
     
     value = np.var(tensor.value, axis=axis, keepdims=keepdims)
-    return gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    return out
 
 def median(tensor: 'Tensor', axis=None, keepdims=False) -> 'Tensor':
     """

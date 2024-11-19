@@ -26,6 +26,7 @@ __all__ = [
     "ReLuBackward",
     "MaximumBackward",
     "MinimumBackward",
+    "MeanBackward",
 ]
 
 class AddBackward:
@@ -313,3 +314,21 @@ class MinimumBackward:
         return grad
 
 
+class MeanBackward:
+    def __init__(self, input: 'Tensor', axis=None, keepdims=False) -> None:
+        self.input = [input]
+        self.axis = axis
+        self.keepdims = keepdims
+
+    def backward(self, gradient: 'Tensor') -> list:
+        x = self.input[0]
+        grad_x = gradient
+
+        if self.axis is None:
+            grad_x.value = np.broadcast_to(grad_x.value, x.shape) / x.value.size
+        else:
+            if not self.keepdims:
+                grad_x.value = np.expand_dims(grad_x.value, axis=self.axis)
+            grad_x.value = np.broadcast_to(grad_x.value, x.shape) / x.value.shape[self.axis]
+
+        return [grad_x]
