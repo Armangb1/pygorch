@@ -1,8 +1,28 @@
-from .tensor import Tensor
+from typing import TYPE_CHECKING
+import gorch
+if TYPE_CHECKING:
+    from .tensor import Tensor
 import numpy as np
 from .backward import *
 
-def transpose(tensor: Tensor, axes=None) -> Tensor:
+def reshape(tensor: 'Tensor', *new_shape) -> 'Tensor':
+    """
+    Takes a tensor object and returns a reshaped tensor.
+    
+    Args:
+    tensor (Tensor): The input tensor to be reshaped.
+    new_shape (sequence of ints): The new shape for the tensor.
+    
+    Returns:
+    Tensor: The reshaped tensor.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.reshape(tensor.value, new_shape)
+    return gorch.Tensor(value, requires_grad=tensor.requires_grad)
+
+def transpose(tensor: 'Tensor', axes=None) -> 'Tensor':
     """
     Takes a tensor object and returns a transposed tensor.
     
@@ -13,16 +33,16 @@ def transpose(tensor: Tensor, axes=None) -> Tensor:
     Returns:
     Tensor: The transposed tensor.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.transpose(tensor.value, axes=axes)
-    out = Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
     if tensor.requires_grad:
         out._grad_fn = TransposeBackward(tensor, axes)
     return out
 
-def dot(tensor1: Tensor, tensor2: Tensor) -> Tensor:
+def dot(tensor1: 'Tensor', tensor2: 'Tensor') -> 'Tensor':
     """
     Takes two tensor objects and returns their dot product.
     
@@ -33,16 +53,16 @@ def dot(tensor1: Tensor, tensor2: Tensor) -> Tensor:
     Returns:
     Tensor: The dot product of the input tensors.
     """
-    if not isinstance(tensor1, Tensor) or not isinstance(tensor2, Tensor):
+    if not isinstance(tensor1, gorch.Tensor) or not isinstance(tensor2, gorch.Tensor):
         raise ValueError("Inputs must be Tensors")
     
     value = np.dot(tensor1.value, tensor2.value)
-    out = Tensor(value, requires_grad=tensor1.requires_grad or tensor2.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor1.requires_grad or tensor2.requires_grad)
     if out.requires_grad:
         out._grad_fn = DotBackward(tensor1, tensor2)
     return out
 
-def diag(tensor:Tensor) -> Tensor:
+def diag(tensor:'Tensor') -> 'Tensor':
     """
     Takes a tensor object and returns a diagonalized tensor.
     
@@ -52,13 +72,13 @@ def diag(tensor:Tensor) -> Tensor:
     Returns:
     torch.Tensor: The diagonalized tensor.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.diag(tensor.value)
-    return Tensor(value, requires_grad=tensor.requires_grad)
+    return gorch.Tensor(value, requires_grad=tensor.requires_grad)
 
-def eye(n: int, m: int = None, requires_grad: bool = False) -> Tensor:
+def eye(n: int, m: int = None, requires_grad: bool = False) -> 'Tensor':
     """
     Creates a 2-D tensor with ones on the diagonal and zeros elsewhere.
     
@@ -74,9 +94,9 @@ def eye(n: int, m: int = None, requires_grad: bool = False) -> Tensor:
         m = n
     
     value = np.eye(n, m)
-    return Tensor(value, requires_grad=requires_grad)
+    return gorch.Tensor(value, requires_grad=requires_grad)
 
-def ones(*shape, requires_grad=False) -> Tensor:
+def ones(*shape, requires_grad=False) -> 'Tensor':
     """
     Creates a tensor filled with ones.
     
@@ -88,9 +108,9 @@ def ones(*shape, requires_grad=False) -> Tensor:
     Tensor: A tensor filled with ones.
     """
     value = np.ones(shape)
-    return Tensor(value, requires_grad=requires_grad)
+    return gorch.Tensor(value, requires_grad=requires_grad)
 
-def zeros(*shape, requires_grad=False) -> Tensor:
+def zeros(*shape, requires_grad=False) -> 'Tensor':
     """
     Creates a tensor filled with zeros.
     
@@ -102,9 +122,9 @@ def zeros(*shape, requires_grad=False) -> Tensor:
     Tensor: A tensor filled with zeros.
     """
     value = np.zeros(shape)
-    return Tensor(value, requires_grad=requires_grad)
+    return gorch.Tensor(value, requires_grad=requires_grad)
 
-def rand(*shape, requires_grad=False) -> Tensor:
+def rand(*shape, requires_grad=False) -> 'Tensor':
     """
     Creates a tensor filled with random values from a uniform distribution over [0, 1).
     
@@ -116,9 +136,9 @@ def rand(*shape, requires_grad=False) -> Tensor:
     Tensor: A tensor filled with random values from a uniform distribution over [0, 1).
     """
     value = np.random.rand(*shape)
-    return Tensor(value, requires_grad=requires_grad)
+    return gorch.Tensor(value, requires_grad=requires_grad)
 
-def randn(*shape, requires_grad=False) -> Tensor:
+def randn(*shape, requires_grad=False) -> 'Tensor':
     """
     Creates a tensor filled with random values from a standard normal distribution.
     
@@ -130,9 +150,9 @@ def randn(*shape, requires_grad=False) -> Tensor:
     Tensor: A tensor filled with random values from a standard normal distribution.
     """
     value = np.random.randn(*shape)
-    return Tensor(value, requires_grad=requires_grad)
+    return gorch.Tensor(value, requires_grad=requires_grad)
 
-def rand_like(tensor: Tensor, requires_grad=False) -> Tensor:
+def rand_like(tensor: 'Tensor', requires_grad=False) -> 'Tensor':
     """
     Takes a tensor object and returns a tensor with the same shape filled with random values from a uniform distribution over [0, 1).
     
@@ -143,13 +163,13 @@ def rand_like(tensor: Tensor, requires_grad=False) -> Tensor:
     Returns:
     Tensor: A tensor filled with random values from a uniform distribution over [0, 1) with the same shape as the input tensor.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.random.rand(*tensor.shape)
-    return Tensor(value, requires_grad=requires_grad)
+    return gorch.Tensor(value, requires_grad=requires_grad)
 
-def randn_like(tensor: Tensor, requires_grad=False) -> Tensor:
+def randn_like(tensor: 'Tensor', requires_grad=False) -> 'Tensor':
     """
     Takes a tensor object and returns a tensor with the same shape filled with random values from a standard normal distribution.
     
@@ -160,13 +180,13 @@ def randn_like(tensor: Tensor, requires_grad=False) -> Tensor:
     Returns:
     Tensor: A tensor filled with random values from a standard normal distribution with the same shape as the input tensor.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.random.randn(*tensor.shape)
-    return Tensor(value, requires_grad=requires_grad)
+    return gorch.Tensor(value, requires_grad=requires_grad)
 
-def mean(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
+def mean(tensor: 'Tensor', axis=None, keepdims=False) -> 'Tensor':
     """
     Takes a tensor object and returns the mean of its elements along the specified axis.
     
@@ -179,13 +199,13 @@ def mean(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
     Returns:
     Tensor: A tensor containing the mean of the elements along the specified axis.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.mean(tensor.value, axis=axis, keepdims=keepdims)
-    return Tensor(value, requires_grad=tensor.requires_grad)
+    return gorch.Tensor(value, requires_grad=tensor.requires_grad)
 
-def var(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
+def var(tensor: 'Tensor', axis=None, keepdims=False) -> 'Tensor':
     """
     Takes a tensor object and returns the variance of its elements along the specified axis.
     
@@ -198,13 +218,13 @@ def var(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
     Returns:
     Tensor: A tensor containing the variance of the elements along the specified axis.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.var(tensor.value, axis=axis, keepdims=keepdims)
-    return Tensor(value, requires_grad=tensor.requires_grad)
+    return gorch.Tensor(value, requires_grad=tensor.requires_grad)
 
-def median(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
+def median(tensor: 'Tensor', axis=None, keepdims=False) -> 'Tensor':
     """
     Takes a tensor object and returns the median of its elements along the specified axis.
     
@@ -217,13 +237,13 @@ def median(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
     Returns:
     Tensor: A tensor containing the median of the elements along the specified axis.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.median(tensor.value, axis=axis, keepdims=keepdims)
-    return Tensor(value, requires_grad=tensor.requires_grad)
+    return gorch.Tensor(value, requires_grad=tensor.requires_grad)
 
-def sum(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
+def sum(tensor: 'Tensor', axis=None, keepdims=False) -> 'Tensor':
     """
     Takes a tensor object and returns the sum of its elements along the specified axis.
     
@@ -236,14 +256,14 @@ def sum(tensor: Tensor, axis=None, keepdims=False) -> Tensor:
     Returns:
     Tensor: A tensor containing the sum of the elements along the specified axis.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.sum(tensor.value, axis=axis, keepdims=keepdims)
-    return Tensor(value, requires_grad=tensor.requires_grad)
+    return gorch.Tensor(value, requires_grad=tensor.requires_grad)
 
 
-def ones_like(tensor: Tensor) -> Tensor:
+def ones_like(tensor: 'Tensor') -> 'Tensor':
     """
     Takes a tensor object and returns a tensor filled with ones having the same shape.
     
@@ -253,13 +273,13 @@ def ones_like(tensor: Tensor) -> Tensor:
     Returns:
     Tensor: A tensor filled with ones having the same shape as the input tensor.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.ones_like(tensor.value)
-    return Tensor(value, requires_grad=tensor.requires_grad)
+    return gorch.Tensor(value, requires_grad=tensor.requires_grad)
 
-def exp(tensor: Tensor) -> Tensor:
+def exp(tensor: 'Tensor') -> 'Tensor':
     """
     Takes a tensor object and returns a tensor with the exponential function applied element-wise.
     
@@ -269,18 +289,18 @@ def exp(tensor: Tensor) -> Tensor:
     Returns:
     Tensor: A tensor with the exponential function applied element-wise.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.exp(tensor.value)
-    out = Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
     if tensor.requires_grad:
         out._grad_fn = ExpBackward(tensor)
     return out
 
 
 
-def tanh(tensor: Tensor) -> Tensor:
+def tanh(tensor: 'Tensor') -> 'Tensor':
     """
     Takes a tensor object and returns a tensor with the hyperbolic tangent applied element-wise.
     
@@ -290,16 +310,16 @@ def tanh(tensor: Tensor) -> Tensor:
     Returns:
     Tensor: A tensor with the tanh function applied element-wise.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.tanh(tensor.value)
-    out = Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
     if tensor.requires_grad:
         out._grad_fn = TanhBackward(tensor)
     return out
 
-def sinh(tensor: Tensor) -> Tensor:
+def sinh(tensor: 'Tensor') -> 'Tensor':
     """
     Takes a tensor object and returns a tensor with the hyperbolic sine applied element-wise.
     
@@ -309,16 +329,16 @@ def sinh(tensor: Tensor) -> Tensor:
     Returns:
     Tensor: A tensor with the sinh function applied element-wise.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.sinh(tensor.value)
-    out = Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
     if tensor.requires_grad:
         out._grad_fn = SinhBackward
     return out
 
-def cosh(tensor: Tensor) -> Tensor:
+def cosh(tensor: 'Tensor') -> 'Tensor':
     """
     Takes a tensor object and returns a tensor with the hyperbolic cosine applied element-wise.
     
@@ -328,18 +348,18 @@ def cosh(tensor: Tensor) -> Tensor:
     Returns:
     Tensor: A tensor with the cosh function applied element-wise.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.cosh(tensor.value)
-    out = Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
     if tensor.requires_grad:
         out._grad_fn = CoshBackward(tensor)
     return out
 
 
 
-def cos(tensor: Tensor) -> Tensor:
+def cos(tensor: 'Tensor') -> 'Tensor':
     """
     Takes a tensor object and returns a tensor with the cosine applied element-wise.
     
@@ -349,16 +369,16 @@ def cos(tensor: Tensor) -> Tensor:
     Returns:
     Tensor: A tensor with the cosine function applied element-wise.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.cos(tensor.value)
-    out = Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
     if tensor.requires_grad:
         out._grad_fn = CosBackward(tensor)
     return out
 
-def sin(tensor: Tensor) -> Tensor:
+def sin(tensor: 'Tensor') -> 'Tensor':
     """
     Takes a tensor object and returns a tensor with the sine applied element-wise.
     
@@ -368,17 +388,17 @@ def sin(tensor: Tensor) -> Tensor:
     Returns:
     Tensor: A tensor with the sine function applied element-wise.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.sin(tensor.value)
-    out = Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
     if tensor.requires_grad:
         out._grad_fn = SinBackward(tensor)
     return out
 
 
-def tan(tensor: Tensor) -> Tensor:
+def tan(tensor: 'Tensor') -> 'Tensor':
     """
     Takes a tensor object and returns a tensor with the tangent applied element-wise.
     
@@ -388,16 +408,16 @@ def tan(tensor: Tensor) -> Tensor:
     Returns:
     Tensor: A tensor with the tangent function applied element-wise.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.tan(tensor.value)
-    out = Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
     if tensor.requires_grad:
         out._grad_fn = TanBackward(tensor)
     return out
 
-def sigmoid(tensor: Tensor) -> Tensor:
+def sigmoid(tensor: 'Tensor') -> 'Tensor':
     """
     Takes a tensor object and returns a tensor with the sigmoid function applied element-wise.
     
@@ -407,16 +427,16 @@ def sigmoid(tensor: Tensor) -> Tensor:
     Returns:
     Tensor: A tensor with the sigmoid function applied element-wise.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = 1 / (1 + np.exp(-tensor.value))
-    out = Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
     if tensor.requires_grad:
         out._grad_fn = SigmoidBackward(tensor)
     return out
 
-def relu(tensor: Tensor) -> Tensor:
+def relu(tensor: 'Tensor') -> 'Tensor':
     """
     Takes a tensor object and returns a tensor with the ReLU function applied element-wise.
     
@@ -426,16 +446,16 @@ def relu(tensor: Tensor) -> Tensor:
     Returns:
     Tensor: A tensor with the ReLU function applied element-wise.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.maximum(0, tensor.value)
-    out = Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
     if tensor.requires_grad:
         out._grad_fn = ReLuBackward(tensor)
     return out
 
-def step(tensor: Tensor) -> Tensor:
+def step(tensor: 'Tensor') -> 'Tensor':
     """
     Takes a tensor object and returns a tensor with the step function applied element-wise.
     
@@ -445,13 +465,13 @@ def step(tensor: Tensor) -> Tensor:
     Returns:
     Tensor: A tensor with the step function applied element-wise.
     """
-    if not isinstance(tensor, Tensor):
+    if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
     value = np.where(tensor.value > 0, 1, 0)
-    return Tensor(value, requires_grad=tensor.requires_grad)
+    return gorch.Tensor(value, requires_grad=tensor.requires_grad)
 
-def maximum(input: Tensor, other: Tensor) -> Tensor:
+def maximum(input: 'Tensor', other: 'Tensor') -> 'Tensor':
     """
     Takes two tensor objects and returns a tensor with the element-wise maximum.
     
@@ -462,16 +482,16 @@ def maximum(input: Tensor, other: Tensor) -> Tensor:
     Returns:
     Tensor: A tensor with the element-wise maximum.
     """
-    if not isinstance(input, Tensor) or not isinstance(other, Tensor):
+    if not isinstance(input, gorch.Tensor) or not isinstance(other, gorch.Tensor):
         raise ValueError("Inputs must be Tensors")
     
     value = np.maximum(input.value, other.value)
-    out = Tensor(value, requires_grad=input.requires_grad or other.requires_grad)
+    out = gorch.Tensor(value, requires_grad=input.requires_grad or other.requires_grad)
     if out.requires_grad:
         out._grad_fn = MaximumBackward(input, other)
     return out
 
-def minimum(input: Tensor, other: Tensor) -> Tensor:
+def minimum(input: 'Tensor', other: 'Tensor') -> 'Tensor':
     """
     Takes two tensor objects and returns a tensor with the element-wise minimum.
     
@@ -482,11 +502,11 @@ def minimum(input: Tensor, other: Tensor) -> Tensor:
     Returns:
     Tensor: A tensor with the element-wise minimum.
     """
-    if not isinstance(input, Tensor) or not isinstance(other, Tensor):
+    if not isinstance(input, gorch.Tensor) or not isinstance(other, gorch.Tensor):
         raise ValueError("Inputs must be Tensors")
     
     value = np.minimum(input.value, other.value)
-    out = Tensor(value, requires_grad=input.requires_grad or other.requires_grad)
+    out = gorch.Tensor(value, requires_grad=input.requires_grad or other.requires_grad)
     if out.requires_grad:
         out._grad_fn = MinimumBackward(input, other)
     return out
