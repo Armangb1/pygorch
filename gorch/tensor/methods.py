@@ -19,7 +19,7 @@ def reshape(tensor: 'Tensor', *new_shape) -> 'Tensor':
     if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
-    value = np.reshape(tensor.value, new_shape)
+    value = np.reshape(tensor.value, new_shape[0])
     return gorch.Tensor(value, requires_grad=tensor.requires_grad)
 
 def transpose(tensor: 'Tensor', axes=None) -> 'Tensor':
