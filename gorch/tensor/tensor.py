@@ -27,9 +27,9 @@ class Tensor:
                 
             
         if self.grad is None:
-            self.grad = gradient
+            self.grad = gradient.transpose()
         else:
-            self.grad += gradient
+            self.grad += gradient.transpose()
         
 
         if self._grad_fn is not None:
