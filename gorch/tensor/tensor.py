@@ -38,7 +38,8 @@ class Tensor:
                 if isinstance(tensor, Tensor):
                     tensor.backward(grad)
 
-    
+    def detach(self):
+        return Tensor(self.value.copy(), requires_grad=False)
     
     def __getitem__(self,idx):
         value = self.value[idx]
