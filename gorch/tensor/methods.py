@@ -514,3 +514,60 @@ def minimum(input: 'Tensor', other: 'Tensor') -> 'Tensor':
     if out.requires_grad:
         out._grad_fn = MinimumBackward(input, other)
     return out
+
+def abs(tensor: 'Tensor') -> 'Tensor':
+    """
+    Takes a tensor object and returns a tensor with the absolute value applied element-wise.
+    
+    Args:
+    tensor (Tensor): The input tensor to apply the absolute value to.
+    
+    Returns:
+    Tensor: A tensor with the absolute value applied element-wise.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.abs(tensor.value)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = AbsBackward(tensor)
+    return out
+
+def sqrt(tensor: 'Tensor') -> 'Tensor':
+    """
+    Takes a tensor object and returns a tensor with the square root applied element-wise.
+    
+    Args:
+    tensor (Tensor): The input tensor to apply the square root to.
+    
+    Returns:
+    Tensor: A tensor with the square root applied element-wise.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.sqrt(tensor.value)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = SqrtBackward(tensor)
+    return out
+
+def log(tensor: 'Tensor') -> 'Tensor':
+    """
+    Takes a tensor object and returns a tensor with the natural logarithm applied element-wise.
+    
+    Args:
+    tensor (Tensor): The input tensor to apply the natural logarithm to.
+    
+    Returns:
+    Tensor: A tensor with the natural logarithm applied element-wise.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.log(tensor.value)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = LogBackward(tensor)
+    return out

@@ -151,5 +151,14 @@ class Tensor:
     def sum(self , axis=None, keepdims=False):
         return methods.sum(self, axis, keepdims)
     
+    def abs(self):
+        return methods.abs(self)
+    
+    def sqrt(self):
+        return methods.sqrt(self)
+    
+    def log(self):
+        return methods.log(self)
+    
     def __repr__(self) -> str:
         return f"Tensor({self.value})"

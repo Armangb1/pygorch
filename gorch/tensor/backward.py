@@ -27,6 +27,9 @@ __all__ = [
     "MaximumBackward",
     "MinimumBackward",
     "MeanBackward",
+    "SqrtBackward",
+    "LogBackward",
+    "AbsBackward",
 ]
 
 class AddBackward:
@@ -142,6 +145,7 @@ class PowBackward:
         x = self.input[0]
         y = self.input[1]
         grad_x = y*x**(y-1)
+        grad_x = gorch.diag(grad_x.reshape(-1))
         grad = [gradient.dot(grad_x)]
         return grad
 
@@ -187,8 +191,7 @@ class SinBackward:
     def backward(self, gradient:'Tensor') -> 'Tensor':
         x = self.input[0]
         grad_x = x.cos()
-        grad_x = gorch.Tensor(np.diag(grad_x.value.reshape(-1)))
-        grad = [gradient.dot(grad_x)]
+        grad = [gradient*grad_x]
         return grad
     
 class CosBackward:
@@ -197,9 +200,8 @@ class CosBackward:
 
     def backward(self, gradient:'Tensor') -> 'Tensor':
         x = self.input[0]
-        grad_x = -x.cos()
-        grad_x = gorch.Tensor(np.diag(grad_x.value.reshape(-1)))
-        grad = [gradient.dot(grad_x)]
+        grad_x = -x.sin()
+        grad = [gradient*grad_x]
         return grad
     
 class TanBackward:
@@ -209,8 +211,7 @@ class TanBackward:
     def backward(self, gradient:'Tensor') -> 'Tensor':
         x = self.input[0]
         grad_x = 1-x.tan()**2
-        grad_x = gorch.Tensor(np.diag(grad_x.value.reshape(-1)))
-        grad = [gradient.dot(grad_x)]
+        grad = [gradient*grad_x]
         return grad
 
 class ExpBackward:
@@ -220,8 +221,7 @@ class ExpBackward:
     def backward(self, gradient:'Tensor') -> 'Tensor':
         x = self.input[0]
         grad_x = x.exp()
-        grad_x = gorch.Tensor(np.diag(grad_x.value.reshape(-1)))
-        grad = [gradient.dot(grad_x)]
+        grad = [gradient*grad_x]
         return grad
 
 class SinhBackward:
@@ -231,8 +231,7 @@ class SinhBackward:
     def backward(self, gradient: 'Tensor') -> 'Tensor':
         x = self.input[0]
         grad_x = x.cosh()
-        grad_x = gorch.Tensor(np.diag(grad_x.value.reshape(-1)))
-        grad = [gradient.dot(grad_x)]
+        grad = [gradient*grad_x]
         return grad
 
 class CoshBackward:
@@ -242,8 +241,7 @@ class CoshBackward:
     def backward(self, gradient: 'Tensor') -> 'Tensor':
         x = self.input[0]
         grad_x = x.sinh()
-        grad_x = gorch.Tensor(np.diag(grad_x.value.reshape(-1)))
-        grad = [gradient.dot(grad_x)]
+        grad = [gradient*grad_x]
         return grad
     
 class TanhBackward:
@@ -253,8 +251,7 @@ class TanhBackward:
     def backward(self, gradient:'Tensor') -> 'Tensor':
         x = self.input[0]
         grad_x = -x.tanh()**2+1
-        grad_x = gorch.Tensor(np.diag(grad_x.value.reshape(-1)))
-        grad = [gradient.dot(grad_x)]
+        grad = [gradient*grad_x]
         return grad 
 
 class SigmoidBackward:
@@ -264,8 +261,7 @@ class SigmoidBackward:
     def backward(self, gradient:'Tensor'):
         X = self.input[0]
         grad = X.sigmoid()*(-X.sigmoid()+1)
-        grad_x = gorch.Tensor(np.diag(grad.value.reshape(-1)))
-        grad = [gradient.dot(grad_x)]
+        grad = [gradient*grad]
         return grad
 
 class ReLuBackward:
@@ -275,8 +271,7 @@ class ReLuBackward:
     def backward(self, gradient:'Tensor') -> 'Tensor':
         x = self.input[0]
         grad_x = x.step()
-        grad_x = gorch.Tensor(np.diag(grad_x.value.reshape(-1)))
-        grad = [gradient.dot(grad_x)]
+        grad = [gradient*grad_x]
         return grad
     
 class MaximumBackward:
@@ -290,10 +285,10 @@ class MaximumBackward:
         grad_y = ~grad_x
         grad_x = grad_x.astype(float)
         grad_y = grad_y.astype(float)
-        grad_x = gorch.Tensor(np.diag(grad_x))
-        grad_y = gorch.Tensor(np.diag(grad_y))
+        grad_x = gorch.Tensor(grad_x)
+        grad_y = gorch.Tensor(grad_y)
         
-        grad = [gradient.dot(grad_x),gradient.dot(grad_y)]
+        grad = [gradient*grad_x,gradient*grad_y]
         return grad
     
 class MinimumBackward:
@@ -307,10 +302,8 @@ class MinimumBackward:
         grad_y = ~grad_x
         grad_x = grad_x.astype(float)
         grad_y = grad_y.astype(float)
-        grad_x = gorch.Tensor(np.diag(grad_x))
-        grad_y = gorch.Tensor(np.diag(grad_y))
         
-        grad = [gradient.dot(grad_x),gradient.dot(grad_y)]
+        grad = [gradient*grad_x,gradient*grad_y]
         return grad
 
 
@@ -322,7 +315,7 @@ class MeanBackward:
 
     def backward(self, gradient: 'Tensor') -> list:
         x = self.input[0]
-        grad_x = gradient
+        grad_x = gradient.transpose()
 
         if self.axis is None:
             grad_x.value = np.broadcast_to(grad_x.value, x.shape) / x.value.size
@@ -331,4 +324,34 @@ class MeanBackward:
                 grad_x.value = np.expand_dims(grad_x.value, axis=self.axis)
             grad_x.value = np.broadcast_to(grad_x.value, x.shape) / x.value.shape[self.axis]
 
-        return [grad_x]
+        return [grad_x.transpose()]
+    
+class SqrtBackward:
+    def __init__(self, input: 'Tensor') -> None:
+        self.input = [input]
+
+    def backward(self, gradient: 'Tensor') -> list:
+        x = self.input[0]
+        grad_x = 0.5 / x.sqrt()
+        grad = [gradient * grad_x]
+        return grad
+        
+class LogBackward:
+    def __init__(self, input: 'Tensor') -> None:
+        self.input = [input]
+
+    def backward(self, gradient: 'Tensor') -> list:
+        x = self.input[0]
+        grad_x = 1 / x
+        grad = [gradient * grad_x]
+        return grad
+
+class AbsBackward:
+    def __init__(self, input: 'Tensor') -> None:
+        self.input = [input]
+
+    def backward(self, gradient: 'Tensor') -> list:
+        x = self.input[0]
+        grad_x = x.value / np.abs(x.value)
+        grad = [gradient * grad_x]
+        return grad
