@@ -472,7 +472,7 @@ def step(tensor: 'Tensor') -> 'Tensor':
     if not isinstance(tensor, gorch.Tensor):
         raise ValueError("Input must be a Tensor")
     
-    value = np.where(tensor.value > 0, 1, 0)
+    value = np.heaviside(tensor.value, 1)
     return gorch.Tensor(value, requires_grad=tensor.requires_grad)
 
 def maximum(input: 'Tensor', other: 'Tensor') -> 'Tensor':
