@@ -18,7 +18,7 @@ class RMSprop(Optimizer):
 
             v = self.v[i]
 
-            v = alpha*v + (1-alpha)*param.grad.value
+            v = alpha*v + (1-alpha)*param.grad.value**2
 
             self.v[i] = v
 

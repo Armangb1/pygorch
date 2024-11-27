@@ -28,7 +28,7 @@ class Adam(Optimizer):
             m = beta1*m + (1-beta1)*param.grad.value
             self.m[i] = m
 
-            v = beta2*v + (1-beta2)*param.grad.value
+            v = beta2*v + (1-beta2)*param.grad.value**2
             self.v[i] = v
 
             m_hat = m/(1-beta1**self.k)

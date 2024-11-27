@@ -31,4 +31,4 @@ class Adamax(Optimizer):
 
             m = m/(1-beta1)
 
-            param -= lr*m/u
+            param.value -= lr*m/u
