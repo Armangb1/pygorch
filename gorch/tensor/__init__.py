@@ -33,5 +33,7 @@ __all__ = [
     "abs",
     "sqrt",
     "log",
+    "leakyRelu",
+    "softmax",
     "Tensor"
 ]

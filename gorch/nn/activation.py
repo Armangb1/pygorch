@@ -20,4 +20,17 @@ class Tanh(Module):
 
     def forward(self, *inputs, **kwargs):
         return inputs.tanh()
+      
+class Softmax(Module):
+    def __init__(self) -> None:
+        super().__init__()
 
+    def forward(self, *inputs, **kwargs):
+        return inputs.softmax()
+    
+class LeakyRelu(Module):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def forward(self, *inputs, **kwargs):
+        return inputs.leakyRelu()

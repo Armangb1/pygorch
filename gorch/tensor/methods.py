@@ -574,3 +574,39 @@ def log(tensor: 'Tensor') -> 'Tensor':
     if tensor.requires_grad:
         out._grad_fn = LogBackward(tensor)
     return out
+
+
+def leakyRelu(tensor: 'Tensor', alpha: float = 0.01) -> 'Tensor':
+    """
+    Takes a tensor object and returns a tensor with the Leaky ReLU function applied element-wise.
+    
+    Args:
+    tensor (Tensor): The input tensor to apply Leaky ReLU to.
+    alpha (float, optional): The slope of the negative part of the function.
+    
+    Returns:
+    Tensor: A tensor with the Leaky ReLU function applied element-wise.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    out = gorch.maximum(alpha * tensor, tensor)
+    return out
+
+def softmax(tensor: 'Tensor', axis=None) -> 'Tensor':
+    """
+    Takes a tensor object and returns a tensor with the softmax function applied element-wise.
+    
+    Args:
+    tensor (Tensor): The input tensor to apply softmax to.
+    axis (int, optional): The axis along which the softmax will be computed. The default is the last axis.
+    
+    Returns:
+    Tensor: A tensor with the softmax function applied element-wise.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    out = tensor.exp()
+    out = out / out.sum(axis=axis, keepdims=True)
+    return out
