@@ -78,22 +78,25 @@ def diag(tensor:'Tensor') -> 'Tensor':
     value = np.diag(tensor.value)
     return gorch.Tensor(value, requires_grad=tensor.requires_grad)
 
-def eye(n: int, m: int = None, requires_grad: bool = False) -> 'Tensor':
+def eye(*shape, requires_grad: bool = False) -> 'Tensor':
     """
-    Creates a 2-D tensor with ones on the diagonal and zeros elsewhere.
+    Creates a tensor with ones on the diagonal and zeros elsewhere.
     
     Args:
-    n (int): Number of rows in the output tensor.
-    m (int, optional): Number of columns in the output tensor. If None, defaults to n.
+    shape (int...): Dimensions of the output tensor. If more than 2 dimensions are provided, 
+                    the function will create a batch of 2-D identity matrices.
     requires_grad (bool, optional): If autograd should record operations on the returned tensor.
     
     Returns:
-    Tensor: A 2-D tensor with ones on the diagonal and zeros elsewhere.
+    Tensor: A tensor with ones on the diagonal and zeros elsewhere.
     """
-    if m is None:
-        m = n
-    
-    value = np.eye(n, m)
+    if len(shape) <= 2:
+        value = np.eye(*shape)
+    if len(shape) > 2:
+        iter = int(np.array(shape[:-2]).sum())
+        value = np.concatenate([np.eye(shape[-2], shape[-1]) for i in range(iter)], axis=0)
+        value = value.reshape(*shape)
+
     return gorch.Tensor(value, requires_grad=requires_grad)
 
 def ones(*shape, requires_grad=False) -> 'Tensor':
@@ -107,7 +110,7 @@ def ones(*shape, requires_grad=False) -> 'Tensor':
     Returns:
     Tensor: A tensor filled with ones.
     """
-    value = np.ones(shape)
+    value = np.ones(*shape)
     return gorch.Tensor(value, requires_grad=requires_grad)
 
 def zeros(*shape, requires_grad=False) -> 'Tensor':
