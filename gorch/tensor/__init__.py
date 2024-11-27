@@ -2,6 +2,9 @@ from .tensor import Tensor as Tensor
 from .methods import *
 
 __all__ = [
+    "reshape",
+    "transpose",
+    "dot",
     "diag",
     "eye",
     "ones",
@@ -27,5 +30,8 @@ __all__ = [
     "step",
     "maximum",
     "minimum",
+    "abs",
+    "sqrt",
+    "log",
     "Tensor"
 ]
