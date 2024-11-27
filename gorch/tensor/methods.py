@@ -267,8 +267,10 @@ def sum(tensor: 'Tensor', axis=None, keepdims=False) -> 'Tensor':
         raise ValueError("Input must be a Tensor")
     
     value = np.sum(tensor.value, axis=axis, keepdims=keepdims)
-    return gorch.Tensor(value, requires_grad=tensor.requires_grad)
-
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = SumBackward(tensor,axis,keepdims)
+    return out
 
 def ones_like(tensor: 'Tensor') -> 'Tensor':
     """

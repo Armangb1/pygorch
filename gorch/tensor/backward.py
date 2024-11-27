@@ -31,6 +31,7 @@ __all__ = [
     "SqrtBackward",
     "LogBackward",
     "AbsBackward",
+    "SumBackward"
 ]
 
 class AddBackward:
@@ -383,3 +384,22 @@ class AbsBackward:
         grad_x = x.value / np.abs(x.value)
         grad = [gradient * grad_x]
         return grad
+    
+class SumBackward:
+    def __init__(self, input: 'Tensor', axis=None, keepdims=False) -> None:
+        self.input = [input]
+        self.axis = axis
+        self.keepdims = keepdims
+
+    def backward(self, gradient: 'Tensor') -> list:
+        x = self.input[0]
+        grad_x = gradient
+
+        if self.axis is None:
+            grad_x = np.broadcast_to(grad_x, x.shape)
+        else:
+            if not self.keepdims:
+                grad_x = np.expand_dims(grad_x, axis=self.axis)
+            grad_x = np.broadcast_to(grad_x, x.shape)
+
+        return [gorch.Tensor(grad_x)]
