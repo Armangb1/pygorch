@@ -303,37 +303,52 @@ class ReLuBackward:
         return grad
     
 class MaximumBackward:
-    def __init__(self, x:'Tensor', y:'Tensor') -> None:
+    def __init__(self, x: 'Tensor', y: 'Tensor') -> None:
         self.input = [x, y]
 
-    def backward(self, gradient:'Tensor'):
-        x = self.input[0]
-        y = self.input[1]
-        grad_x = x.value>y.value
-        grad_y = ~grad_x
-        grad_x = grad_x.astype(float)
-        grad_y = grad_y.astype(float)
-        grad_x = gorch.Tensor(grad_x)
-        grad_y = gorch.Tensor(grad_y)
-        
-        grad = [gradient*grad_x,gradient*grad_y]
-        return grad
+    def backward(self, gradient: 'Tensor') -> list:
+        x, y = self.input
+        grad_x = gradient.transpose() * (x.value >= y.value)
+        grad_y = gradient.transpose() * (x.value < y.value)
+
+        # Handle broadcasting
+        while len(grad_x.shape) > len(x.shape):
+            grad_x = grad_x.sum(axis=0)
+        while len(grad_y.shape) > len(y.shape):
+            grad_y = grad_y.sum(axis=0)
+
+        for axis in range(-1, -len(x.shape) - 1, -1):
+            if x.shape[axis] == 1:
+                grad_x = grad_x.sum(axis=axis, keepdims=True)
+        for axis in range(-1, -len(y.shape) - 1, -1):
+            if y.shape[axis] == 1:
+                grad_y = grad_y.sum(axis=axis, keepdims=True)
+
+        return [grad_x.transpose(), grad_y.transpose()]
     
 class MinimumBackward:
-    def __init__(self, x:'Tensor', y:'Tensor') -> None:
+    def __init__(self, x: 'Tensor', y: 'Tensor') -> None:
         self.input = [x, y]
 
-    def backward(self, gradient:'Tensor'):
-        x = self.input[0]
-        y = self.input[1]
-        grad_x = x.value<y.value
-        grad_y = ~grad_x
-        grad_x = grad_x.astype(float)
-        grad_y = grad_y.astype(float)
-        
-        grad = [gradient*grad_x,gradient*grad_y]
-        return grad
+    def backward(self, gradient: 'Tensor') -> list:
+        x, y = self.input
+        grad_x = gradient.transpose() * (x.value <= y.value)
+        grad_y = gradient.transpose() * (x.value > y.value)
 
+        # Handle broadcasting
+        while len(grad_x.shape) > len(x.shape):
+            grad_x = grad_x.sum(axis=0)
+        while len(grad_y.shape) > len(y.shape):
+            grad_y = grad_y.sum(axis=0)
+
+        for axis in range(-1, -len(x.shape) - 1, -1):
+            if x.shape[axis] == 1:
+                grad_x = grad_x.sum(axis=axis, keepdims=True)
+        for axis in range(-1, -len(y.shape) - 1, -1):
+            if y.shape[axis] == 1:
+                grad_y = grad_y.sum(axis=axis, keepdims=True)
+
+        return [grad_x.transpose(), grad_y.transpose()]
 
 class MeanBackward:
     def __init__(self, input: 'Tensor', axis=None, keepdims=False) -> None:
