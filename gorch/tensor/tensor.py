@@ -104,6 +104,15 @@ class Tensor:
         if requires_grad:
             c._grad_fn = PowBackward(self, other)
         return c
+    
+    def __truediv__(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        requires_grad = self.requires_grad or other.requires_grad
+        c =  Tensor(self.value/other.value,requires_grad=requires_grad)
+        if requires_grad:
+            c._grad_fn = DivBackward(self,other)
+        return c
 
     def copy(self):
         value = self.value.copy()

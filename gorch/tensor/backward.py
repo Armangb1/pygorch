@@ -9,6 +9,7 @@ __all__ = [
     "SubBackward",
     "GetItemBackward",
     "MulBackward",
+    "DivBackward",
     "MatMulBackward",
     "DotBackward",
     "PowBackward",
@@ -113,7 +114,34 @@ class MulBackward:
         grad_x = grad_x.transpose()
         grad_y = grad_y.transpose()
         return [grad_x, grad_y]
-    
+
+class DivBackward:
+    def __init__(self, x: 'Tensor', y: 'Tensor') -> None:
+        self.input = [x, y]
+
+    def backward(self, gradient: 'Tensor') -> list:
+        x, y = self.input
+        gradient = gradient.transpose()
+        grad_x = gradient / y
+        grad_y = -gradient * x / (y * y)
+        
+        # Handle broadcasting
+        while len(grad_x.shape) > len(x.shape):
+            grad_x = grad_x.sum(axis=0)
+        while len(grad_y.shape) > len(y.shape):
+            grad_y = grad_y.sum(axis=0)
+
+        for axis in range(-1, -len(x.shape) - 1, -1):
+            if x.shape[axis] == 1:
+                grad_x = grad_x.sum(axis=axis, keepdims=True)
+        for axis in range(-1, -len(y.shape) - 1, -1):
+            if y.shape[axis] == 1:
+                grad_y = grad_y.sum(axis=axis, keepdims=True)
+
+        grad_x = grad_x.transpose()
+        grad_y = grad_y.transpose()
+        return [grad_x, grad_y]
+
 class MatMulBackward:
     def __init__(self, x:'Tensor', y:'Tensor') -> None:
         self.input = [x, y]
