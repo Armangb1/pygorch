@@ -78,6 +78,9 @@ class Tensor:
             c._grad_fn = SubBackward(self, other)
         return c
     
+    def __rsub__(self, other):
+        return -self.__add__(other)
+    
     def __mul__(self, other):
         if not isinstance(other, Tensor):
             other = Tensor(other)
@@ -86,6 +89,9 @@ class Tensor:
         if requires_grad:
             c._grad_fn = MulBackward(self,other)
         return c
+    
+    def __rmul__(self, other):
+        return self.__mul__(other)
     
     def __matmul__(self, other):
         if not isinstance(other, Tensor):
