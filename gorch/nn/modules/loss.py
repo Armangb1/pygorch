@@ -20,7 +20,7 @@ class L1Loss(_Loss):
     
     def forward(self, input:Tensor, target:Tensor):
         e = target-input
-        L = gorch.sum(gorch.abs(e),axis=e.shape[1:-1])
+        L = gorch.sum(gorch.abs(e),axis=tuple(range(1,len(e.shape)-1)))
         return self.reduction(L)
 
 class MSELoss(_Loss):
@@ -29,7 +29,7 @@ class MSELoss(_Loss):
 
     def forward(self, input:Tensor, target:Tensor):
         e = target-input
-        L = gorch.sum(e**2,axis=e.shape[1:-1])
+        L = gorch.sum(e**2,axis=tuple(range(1,len(e.shape)-1)))
         return self.reduction(L)
     
 class BCELoss(_Loss):
@@ -38,6 +38,6 @@ class BCELoss(_Loss):
     
     def forward(self, input:Tensor, target:Tensor):
         e = input
-        L = -gorch.sum(target*gorch.log(e)+(1-target)*gorch.log(1-e),axis=e.shape[1:-1])
+        L = -gorch.sum(target*gorch.log(e)+(1-target)*gorch.log(1-e),axis=tuple(range(1,len(e.shape)-1)))
         return self.reduction(L)
     
