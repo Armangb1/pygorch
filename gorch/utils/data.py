@@ -1,4 +1,5 @@
 from abc import ABC
+import random
 
 class Dataset(ABC):
     def __init__(self) -> None:
@@ -28,14 +29,19 @@ class TensorDataset(Dataset):
         tensors = self.tensors
         return len(tensors[0].value)
 
-
 class DataLoader:
-    def __init__(self, dataset, batchsize) -> None:
+    def __init__(self, dataset, batchsize, shuffle=False) -> None:
         self.dataset = dataset
         self.batchsize = batchsize
+        self.shuffle = shuffle
+        self.indices = list(range(len(dataset)))
+        if self.shuffle:
+            random.shuffle(self.indices)
 
     def __iter__(self):
         self.idx = 0
+        if self.shuffle:
+            random.shuffle(self.indices)
         return self
 
     def __next__(self):
@@ -43,11 +49,12 @@ class DataLoader:
         dataset = self.dataset
         batchsize = self.batchsize
 
-        if idx== len(dataset):
+        if idx >= len(dataset):
             raise StopIteration
-        nextIdx = idx+batchsize
-        if nextIdx>=len(dataset):
+        nextIdx = idx + batchsize
+        if nextIdx >= len(dataset):
             nextIdx = len(dataset)
-        out = dataset[idx:nextIdx]
+        batch_indices = self.indices[idx:nextIdx]
+        out = dataset[batch_indices]
         self.idx = nextIdx
         return out
