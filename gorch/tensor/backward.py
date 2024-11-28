@@ -290,7 +290,7 @@ class SigmoidBackward:
     def backward(self, gradient:'Tensor'):
         X = self.input[0]
         grad = X.sigmoid()*(-X.sigmoid()+1)
-        grad = [gradient*grad]
+        grad = [gradient*grad.transpose()]
         return grad
 
 class ReLuBackward:
