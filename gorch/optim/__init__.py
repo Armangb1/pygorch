@@ -10,6 +10,7 @@ from .nadam import NAdam as NAdam
 from .amsgrad import AMSGrad as AMSGrad 
 from .nestrov import Nestrov as Nestrov
 from .pid import PID as PID
+from .lm import LM as LM
 
 
 del optimizer  
