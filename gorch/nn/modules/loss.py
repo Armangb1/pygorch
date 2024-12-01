@@ -15,7 +15,7 @@ class _Loss(Module):
             self.reduction = gorch.sum
 
 class L1Loss(_Loss):
-    def __init__(self, reduce, reduction) -> None:
+    def __init__(self, reduce = None, reduction:str = "mean") -> None:
         super().__init__(reduce, reduction)
     
     def forward(self, input:Tensor, target:Tensor):
@@ -41,3 +41,11 @@ class BCELoss(_Loss):
         L = -gorch.sum(target*gorch.log(e)+(1-target)*gorch.log(1-e),axis=tuple(range(1,len(e.shape)-1)))
         return self.reduction(L)
     
+class CrossEntropyLoss(_Loss):
+    def __init__(self, reduce = None, reduction:str="mean") -> None:
+        super().__init__(reduce, reduction)
+    
+    def forward(self, input:Tensor, target:Tensor):
+        e = input
+        L = -gorch.sum(target*gorch.log(e),axis=tuple(range(1,len(e.shape)-1)))
+        return self.reduction(L)
