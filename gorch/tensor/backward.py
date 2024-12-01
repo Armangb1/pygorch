@@ -175,7 +175,7 @@ class PowBackward:
         y = self.input[1]
         grad_x = y*x**(y-1)
         # grad_x = gorch.diag(grad_x.reshape(-1))
-        grad = [gradient*grad_x]
+        grad = [gradient*grad_x.transpose()]
         return grad
 
 class SumBackward:
@@ -386,8 +386,8 @@ class LogBackward:
 
     def backward(self, gradient: 'Tensor') -> list:
         x = self.input[0]
-        grad_x = 1 / x
-        grad = [gradient * grad_x]
+        grad_x = gorch.Tensor(1) / x
+        grad = [gradient * grad_x.transpose()]
         return grad
 
 class AbsBackward:
@@ -397,7 +397,7 @@ class AbsBackward:
     def backward(self, gradient: 'Tensor') -> list:
         x = self.input[0]
         grad_x = x.value / np.abs(x.value)
-        grad = [gradient * grad_x]
+        grad = [gradient * gorch.Tensor(grad_x.T)]
         return grad
     
 class SumBackward:
