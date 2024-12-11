@@ -42,10 +42,10 @@ class BCELoss(_Loss):
         return self.reduction(L)
     
 class CrossEntropyLoss(_Loss):
-    def __init__(self, reduce = None, reduction:str="mean") -> None:
+    def __init__(self, reduce = None, reduction:str="mean", eps = 1e-6) -> None:
         super().__init__(reduce, reduction)
-    
+        self.eps = eps
     def forward(self, input:Tensor, target:Tensor):
         e = input
-        L = -gorch.sum(target*gorch.log(e),axis=tuple(range(1,len(e.shape)-1)))
+        L = -gorch.sum(target*gorch.log(e+self.eps),axis=tuple(range(1,len(e.shape)-1)))
         return self.reduction(L)
