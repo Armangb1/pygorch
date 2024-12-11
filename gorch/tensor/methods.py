@@ -612,3 +612,81 @@ def softmax(tensor: 'Tensor', axis=None) -> 'Tensor':
     out = tensor.exp()
     out = out / out.sum(axis=axis, keepdims=True)
     return out
+
+def max(tensor: 'Tensor', axis=None, keepdims=False) -> 'Tensor':
+    """
+    Takes a tensor object and returns the maximum of its elements along the specified axis.
+    
+    Args:
+    tensor (Tensor): The input tensor whose elements' maximum is to be computed.
+    axis (int or tuple of ints, optional): Axis or axes along which a maximum is performed. 
+                                            The default, axis=None, will compute the maximum of all the elements of the input tensor.
+    keepdims (bool, optional): If True, the axes which are reduced are left in the result as dimensions with size one.
+    
+    Returns:
+    Tensor: A tensor containing the maximum of the elements along the specified axis.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.max(tensor.value, axis=axis, keepdims=keepdims)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = MaxBackward(tensor, axis, keepdims)
+    return out
+
+def min(tensor: 'Tensor', axis=None, keepdims=False) -> 'Tensor':
+    """
+    Takes a tensor object and returns the minimum of its elements along the specified axis.
+    
+    Args:
+    tensor (Tensor): The input tensor whose elements' minimum is to be computed.
+    axis (int or tuple of ints, optional): Axis or axes along which a minimum is performed. 
+                                            The default, axis=None, will compute the minimum of all the elements of the input tensor.
+    keepdims (bool, optional): If True, the axes which are reduced are left in the result as dimensions with size one.
+    
+    Returns:
+    Tensor: A tensor containing the minimum of the elements along the specified axis.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.min(tensor.value, axis=axis, keepdims=keepdims)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = MinBackward(tensor, axis, keepdims)
+    return out
+
+def argmax(tensor: 'Tensor', axis=None) -> 'Tensor':
+    """
+    Takes a tensor object and returns the indices of the maximum values along the specified axis.
+    
+    Args:
+    tensor (Tensor): The input tensor to find the indices of the maximum values.
+    axis (int, optional): Axis along which to find the maximum values. The default is to flatten the tensor.
+    
+    Returns:
+    Tensor: A tensor containing the indices of the maximum values along the specified axis.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.argmax(tensor.value, axis=axis)
+    return gorch.Tensor(value, requires_grad=False)
+
+def argmin(tensor: 'Tensor', axis=None) -> 'Tensor':
+    """
+    Takes a tensor object and returns the indices of the minimum values along the specified axis.
+    
+    Args:
+    tensor (Tensor): The input tensor to find the indices of the minimum values.
+    axis (int, optional): Axis along which to find the minimum values. The default is to flatten the tensor.
+    
+    Returns:
+    Tensor: A tensor containing the indices of the minimum values along the specified axis.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.argmin(tensor.value, axis=axis)
+    return gorch.Tensor(value, requires_grad=False)

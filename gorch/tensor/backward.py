@@ -31,7 +31,9 @@ __all__ = [
     "SqrtBackward",
     "LogBackward",
     "AbsBackward",
-    "SumBackward"
+    "SumBackward",
+    "MaxBackward",
+    "MinBackward",
 ]
 
 class AddBackward:
@@ -204,7 +206,7 @@ class NegBackward:
     def backward(self, gradient:'Tensor') -> 'Tensor':
         grad = [-gradient]
         return grad
-  
+    
 class TransposeBackward:
     def __init__(self, input: 'Tensor') -> None:
         self.input = [input]
@@ -418,3 +420,37 @@ class SumBackward:
             grad_x = np.broadcast_to(grad_x, x.shape)
 
         return [gorch.Tensor(grad_x.T)]
+    
+class MaxBackward:
+    def __init__(self, input: 'Tensor', axis=None, keepdims=False) -> None:
+        self.input = [input]
+        self.axis = axis
+        self.keepdims = keepdims
+
+    def backward(self, gradient: 'Tensor') -> list:
+        x = self.input[0]
+        grad_x = np.zeros_like(x.value)
+        max_indices = np.argmax(x.value, axis=self.axis, keepdims=True)
+        np.put_along_axis(grad_x, max_indices, gradient.value, axis=self.axis)
+
+        if not self.keepdims and self.axis is not None:
+            grad_x = np.expand_dims(grad_x, axis=self.axis)
+
+        return [gorch.Tensor(grad_x)]
+    
+class MinBackward:
+    def __init__(self, input: 'Tensor', axis=None, keepdims=False) -> None:
+        self.input = [input]
+        self.axis = axis
+        self.keepdims = keepdims
+
+    def backward(self, gradient: 'Tensor') -> list:
+        x = self.input[0]
+        grad_x = np.zeros_like(x.value)
+        min_indices = np.argmin(x.value, axis=self.axis, keepdims=True)
+        np.put_along_axis(grad_x, min_indices, gradient.value, axis=self.axis)
+
+        if not self.keepdims and self.axis is not None:
+            grad_x = np.expand_dims(grad_x, axis=self.axis)
+
+        return [gorch.Tensor(grad_x)]

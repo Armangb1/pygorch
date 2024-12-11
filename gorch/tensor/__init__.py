@@ -35,5 +35,9 @@ __all__ = [
     "log",
     "leakyRelu",
     "softmax",
+    "max",
+    "min",
+    "argmax",
+    "argmin",
     "Tensor"
 ]
