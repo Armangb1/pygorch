@@ -11,6 +11,8 @@ from .amsgrad import AMSGrad as AMSGrad
 from .nestrov import Nestrov as Nestrov
 from .pid import PID as PID
 from .lm import LM as LM
+from .rls import RLS as RLS
+from .kalman import EKFOptimizer as EKFOptimizer
 
 
 del optimizer  
@@ -25,6 +27,7 @@ del nadam
 del amsgrad
 del nestrov  
 del pid  
+del rls
 
 __all__ = [
     "Optimizer",
