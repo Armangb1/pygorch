@@ -39,5 +39,6 @@ __all__ = [
     "min",
     "argmax",
     "argmin",
+    "norm",
     "Tensor"
 ]

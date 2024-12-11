@@ -690,3 +690,25 @@ def argmin(tensor: 'Tensor', axis=None) -> 'Tensor':
     
     value = np.argmin(tensor.value, axis=axis)
     return gorch.Tensor(value, requires_grad=False)
+
+def norm(tensor: 'Tensor', ord=None, axis=None, keepdims=False) -> 'Tensor':
+    """
+    Takes a tensor object and returns the norm of its elements along the specified axis.
+    
+    Args:
+    tensor (Tensor): The input tensor whose norm is to be computed.
+    ord (int or str, optional): Order of the norm. Default is None, which means Frobenius norm for matrices and 2-norm for vectors.
+    axis (int or tuple of ints, optional): Axis or axes along which to compute the norm. The default is to compute the norm of the flattened array.
+    keepdims (bool, optional): If True, the axes which are reduced are left in the result as dimensions with size one.
+    
+    Returns:
+    Tensor: A tensor containing the norm of the elements along the specified axis.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.linalg.norm(tensor.value, ord=ord, axis=axis, keepdims=keepdims)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = NormBackward(tensor, ord, axis, keepdims)
+    return out

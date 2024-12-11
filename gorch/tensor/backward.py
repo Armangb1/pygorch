@@ -34,6 +34,7 @@ __all__ = [
     "SumBackward",
     "MaxBackward",
     "MinBackward",
+    "NormBackward",
 ]
 
 class AddBackward:
@@ -453,4 +454,29 @@ class MinBackward:
         if not self.keepdims and self.axis is not None:
             grad_x = np.expand_dims(grad_x, axis=self.axis)
 
+        return [gorch.Tensor(grad_x)]
+
+class NormBackward:
+    def __init__(self, input: 'Tensor', ord=2, axis=None, keepdims=False) -> None:
+        self.input = [input]
+        self.ord = ord
+        self.axis = axis
+        self.keepdims = keepdims
+
+    def backward(self, gradient: 'Tensor') -> list:
+        x = self.input[0]
+        norm = np.linalg.norm(x.value, ord=self.ord, axis=self.axis, keepdims=True)
+        grad_x = np.zeros_like(x.value)
+
+        if self.ord == 2:
+            grad_x = x.value / norm
+        elif self.ord == 1:
+            grad_x = np.sign(x.value)
+        else:
+            grad_x = np.power(np.abs(x.value), self.ord - 1) * np.sign(x.value) / norm**(self.ord - 1)
+
+        if self.axis is not None and not self.keepdims:
+            grad_x = np.expand_dims(grad_x, axis=self.axis)
+
+        grad_x = grad_x * gradient.value
         return [gorch.Tensor(grad_x)]
