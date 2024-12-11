@@ -12,7 +12,7 @@ class LM(Optimizer):
         y_pred = model(x)
         jac = jacobian(model, x)
         H = jac.T@jac
-        g = jac.T@(y_pred-y)
+        g = jac.T@((y-y_pred).value.reshape(-1,1))
         H = H + self.lambda_*np.eye(H.shape[0])
         dtheta = np.linalg.solve(H, g)
-        devectorize_parameters(model, dtheta)
+        devectorize_parameters(model, dtheta.reshape(-1))
