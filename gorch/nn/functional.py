@@ -1,7 +1,11 @@
 import gorch
 import numpy as np
 
-__all__ = ['one_hot', 'jacobian', 'vectorize_parameters', 'devectorize_parameters']   
+__all__ = ['one_hot',
+            'jacobian',
+            'vectorize_parameters', 
+            'devectorize_parameters'] 
+
 def one_hot(tensor: gorch.Tensor, num_classes = -1):
     """
     One-hot encode labels.
@@ -17,7 +21,7 @@ def one_hot(tensor: gorch.Tensor, num_classes = -1):
             raise ValueError("One-hot encoding is only applicable to 1D tensors")
     
     if num_classes == -1:
-        num_classes = np.max(tensor.value)+1
+        num_classes = int(np.max(tensor.value)+1)
     else:
         num_classes = num_classes
 
@@ -37,32 +41,41 @@ def jacobian(model, input: gorch.Tensor):
     
     y_pred = model(input)
     outDim = int(np.array(y_pred.shape).prod())
-    numParam = 0
-    numOut = y_pred.shape[1]
+    inDim = 0
+    numOutput = y_pred.shape[1]
     for p in model.parameters():
-        numParam += int(np.array(p.shape).prod())
-    jac = np.zeros((outDim, numParam))
+        inDim += int(np.array(p.shape).prod())
+    jac = np.zeros((outDim, inDim))
     for batchIdx in range(y_pred.shape[0]):
         y_i = model(input[[batchIdx],:])
-        for no in range(numOut):
-            gradient = gorch.zeros(numOut,numOut)
+        for no in range(numOutput):
+            gradient = gorch.zeros(numOutput,numOutput)
             gradient[no, no] = 1
             zero_grad(model)
             y_i.backward(gradient)
             _, valgrad = vectorize_parameters(model)
-            jac[(batchIdx)*numOut+no,:] = valgrad
+            jac[(batchIdx)*numOutput+no,:] = valgrad
     return jac
 
-def vectorize_parameters(model):
+def vectorize_parameters(model_or_param):
     """
     Vectorize the parameters of the model.
     """
-    if not isinstance(model, gorch.nn.Module):
-        raise ValueError("Model should be a module")
-    val =  np.concatenate([p.value.reshape(-1) for p in model.parameters()])
-    valgrad = np.concatenate([p.grad.value.reshape(-1) for p in model.parameters()])
-    return val, valgrad
 
+    if isinstance(model_or_param, gorch.nn.Module):
+        val =  np.concatenate([p.value.reshape(-1) for p in model_or_param.parameters()])
+        if list(model_or_param.parameters())[0].grad is not None:
+            valgrad = np.concatenate([p.grad.value.reshape(-1) for p in model_or_param.parameters()])
+        else:
+            valgrad = None
+        return val, valgrad
+    elif isinstance(model_or_param, list):
+        val =  np.concatenate([p.value.reshape(-1) for p in model_or_param])
+        if model_or_param[0].grad is not None:
+            valgrad = np.concatenate([p.grad.value.reshape(-1) for p in model_or_param if p.grad is not None])
+        else:
+            valgrad = None
+        return val, valgrad
 def devectorize_parameters(model, val):
     """
     Devectorize the parameters of the model.
@@ -70,12 +83,13 @@ def devectorize_parameters(model, val):
     if not isinstance(model, gorch.nn.Module):
         raise ValueError("Model should be a module")
     idx = 0
+    nextIdx = 0
     for p in model.parameters():
-        nextIdx = 0
-        for i in p.shape:
-            nextIdx += i
-        p.value = val[idx:nextIdx].reshape(p.value.shape)
-        idx = nextIdx+1
+        didx = int(np.array(p.shape).prod())
+        nextIdx += didx
+        p.value += val[idx:nextIdx].reshape(p.value.shape)
+        idx = nextIdx
+    return list(model.parameters())
 def zero_grad(model):
     """
     Zero the gradients of the model.
