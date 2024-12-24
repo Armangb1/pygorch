@@ -20,7 +20,10 @@ def reshape(tensor: 'Tensor', *new_shape) -> 'Tensor':
         raise ValueError("Input must be a Tensor")
     
     value = np.reshape(tensor.value, new_shape[0])
-    return gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = ReshapeBackward(tensor, new_shape)
+    return out
 
 def transpose(tensor: 'Tensor', axes=None) -> 'Tensor':
     """
