@@ -79,7 +79,7 @@ class Tensor:
         return c
     
     def __rsub__(self, other):
-        return -self.__add__(other)
+        return -self.__sub__(other)
     
     def __mul__(self, other):
         if not isinstance(other, Tensor):
