@@ -25,6 +25,28 @@ def reshape(tensor: 'Tensor', *new_shape) -> 'Tensor':
         out._grad_fn = ReshapeBackward(tensor, new_shape)
     return out
 
+def inverse(tensor: 'Tensor') -> 'Tensor':
+    """
+    Takes a tensor object and returns its inverse.
+    
+    Args:
+    tensor (Tensor): The input tensor to be inverted.
+    
+    Returns:
+    Tensor: The inverse of the input tensor.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    if tensor.value.shape[0] != tensor.value.shape[1]:
+        raise ValueError("Input must be a square matrix")
+    
+    value = np.linalg.inv(tensor.value)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = InverseBackward(tensor)
+    return out
+
 def transpose(tensor: 'Tensor', axes=None) -> 'Tensor':
     """
     Takes a tensor object and returns a transposed tensor.

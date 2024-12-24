@@ -36,6 +36,7 @@ __all__ = [
     "MaxBackward",
     "MinBackward",
     "NormBackward",
+    "InverseBackward",
 ]
 
 class AddBackward:
@@ -493,3 +494,13 @@ class ReshapeBackward:
         if grad_x.ndim == 1:
             grad_x = grad_x.reshape(1,-1)
         return [gorch.Tensor(grad_x.T)]
+    
+class InverseBackward:
+    def __init__(self, input: 'Tensor') -> None:
+        self.input = [input]
+
+    def backward(self, gradient: 'Tensor') -> list:
+        x = self.input[0]
+        inv_x = np.linalg.inv(x.value)
+        grad_x = -inv_x.T @ gradient.value @ inv_x.T
+        return [gorch.Tensor(grad_x)]

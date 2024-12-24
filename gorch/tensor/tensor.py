@@ -176,5 +176,8 @@ class Tensor:
     def log(self):
         return methods.log(self)
     
+    def inverse(self):
+        return methods.inverse(self)
+
     def __repr__(self) -> str:
         return f"Tensor({self.value})"
