@@ -22,6 +22,25 @@ def reshape(tensor: 'Tensor', *new_shape) -> 'Tensor':
     value = np.reshape(tensor.value, new_shape[0])
     return gorch.Tensor(value, requires_grad=tensor.requires_grad)
 
+def arange(start, stop=None, step=1, requires_grad=False) -> 'Tensor':
+    """
+    Returns a tensor with values from start to stop with a given step.
+    
+    Args:
+    start (int): The starting value of the sequence.
+    stop (int, optional): The end value of the sequence. If None, the sequence will start from 0 and end at start.
+    step (int, optional): The step size between each value in the sequence.
+    requires_grad (bool, optional): If autograd should record operations on the returned tensor.
+    
+    Returns:
+    Tensor: A tensor with values from start to stop with a given step.
+    """
+    if stop is None:
+        start, stop = 0, start
+    
+    value = np.arange(start, stop, step)
+    return gorch.Tensor(value, requires_grad=requires_grad)
+
 def transpose(tensor: 'Tensor', axes=None) -> 'Tensor':
     """
     Takes a tensor object and returns a transposed tensor.
