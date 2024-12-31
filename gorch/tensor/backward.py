@@ -16,6 +16,7 @@ __all__ = [
     "SumBackward",
     "NegBackward",
     "TransposeBackward",
+    "ReshapeBackward",
     "SinBackward",
     "CosBackward",
     "TanBackward",
@@ -35,6 +36,8 @@ __all__ = [
     "MaxBackward",
     "MinBackward",
     "NormBackward",
+    "InverseBackward",
+    "ConcatBackward",
 ]
 
 class AddBackward:
@@ -478,5 +481,38 @@ class NormBackward:
         if self.axis is not None and not self.keepdims:
             grad_x = np.expand_dims(grad_x, axis=self.axis)
 
-        grad_x = grad_x * gradient.value
+        grad_x = grad_x.T * gradient.value
         return [gorch.Tensor(grad_x)]
+
+class ReshapeBackward:
+    def __init__(self, input: 'Tensor', shape) -> None:
+        self.input = [input]
+        self.shape = shape
+
+    def backward(self, gradient: 'Tensor') -> list:
+        grad_x = gradient.transpose().value
+        grad_x = grad_x.reshape(self.input[0].shape)
+        if grad_x.ndim == 1:
+            grad_x = grad_x.reshape(1,-1)
+        return [gorch.Tensor(grad_x.T)]
+    
+class InverseBackward:
+    def __init__(self, input: 'Tensor') -> None:
+        self.input = [input]
+
+    def backward(self, gradient: 'Tensor') -> list:
+        x = self.input[0]
+        inv_x = np.linalg.inv(x.value)
+        grad_x = -inv_x.T @ gradient.value @ inv_x.T
+        return [gorch.Tensor(grad_x)]
+
+
+class ConcatBackward:
+    def __init__(self, inputs: list, axis: int) -> None:
+        self.input = inputs
+        self.axis = axis
+
+    def backward(self, gradient: 'Tensor') -> list:
+        split_indices = np.cumsum([input.shape[self.axis] for input in self.input[:-1]])
+        grads = np.split(gradient.transpose().value, split_indices, axis=self.axis)
+        return [gorch.Tensor(grad).transpose() for grad in grads]

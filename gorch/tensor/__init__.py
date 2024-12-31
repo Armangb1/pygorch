@@ -41,5 +41,7 @@ __all__ = [
     "argmin",
     "norm",
     "arange",
-    "Tensor"
+    "inverse",
+    "concat",
+    "Tensor",
 ]

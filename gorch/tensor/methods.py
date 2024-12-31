@@ -20,7 +20,54 @@ def reshape(tensor: 'Tensor', *new_shape) -> 'Tensor':
         raise ValueError("Input must be a Tensor")
     
     value = np.reshape(tensor.value, new_shape[0])
-    return gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = ReshapeBackward(tensor, new_shape)
+    return out
+
+def inverse(tensor: 'Tensor') -> 'Tensor':
+    """
+    Takes a tensor object and returns its inverse.
+    
+    Args:
+    tensor (Tensor): The input tensor to be inverted.
+    
+    Returns:
+    Tensor: The inverse of the input tensor.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    if tensor.value.shape[0] != tensor.value.shape[1]:
+        raise ValueError("Input must be a square matrix")
+    
+    value = np.linalg.inv(tensor.value)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = InverseBackward(tensor)
+    return out
+
+def concat(tensors: list, axis=0) -> 'Tensor':
+    """
+    Takes a list of tensor objects and concatenates them along the specified axis.
+    
+    Args:
+    tensors (list of Tensors): The list of input tensors to concatenate.
+    axis (int, optional): The axis along which the tensors will be concatenated. Default is 0.
+    
+    Returns:
+    Tensor: A tensor resulting from concatenating the input tensors along the specified axis.
+    """
+    if not all(isinstance(tensor, gorch.Tensor) for tensor in tensors):
+        raise ValueError("All inputs must be Tensors")
+    
+    values = [tensor.value for tensor in tensors]
+    value = np.concatenate(values, axis=axis)
+    requires_grad = any(tensor.requires_grad for tensor in tensors)
+    out = gorch.Tensor(value, requires_grad=requires_grad)
+    if requires_grad:
+        out._grad_fn = ConcatBackward(tensors, axis)
+    return out
 
 def arange(start, stop=None, step=1, requires_grad=False) -> 'Tensor':
     """

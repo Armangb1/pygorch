@@ -79,7 +79,7 @@ class Tensor:
         return c
     
     def __rsub__(self, other):
-        return -self.__add__(other)
+        return -self.__sub__(other)
     
     def __mul__(self, other):
         if not isinstance(other, Tensor):
@@ -176,5 +176,8 @@ class Tensor:
     def log(self):
         return methods.log(self)
     
+    def inverse(self):
+        return methods.inverse(self)
+
     def __repr__(self) -> str:
         return f"Tensor({self.value})"
