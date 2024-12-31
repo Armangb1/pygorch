@@ -49,7 +49,7 @@ class Tensor:
         return c
     
     def __setitem__(self, key, value):
-        self.value[key] =  value
+        self.value[key] = value.value
 
     def __neg__(self):
         c = Tensor(-self.value, requires_grad=self.requires_grad)
