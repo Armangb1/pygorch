@@ -47,6 +47,28 @@ def inverse(tensor: 'Tensor') -> 'Tensor':
         out._grad_fn = InverseBackward(tensor)
     return out
 
+def concat(tensors: list, axis=0) -> 'Tensor':
+    """
+    Takes a list of tensor objects and concatenates them along the specified axis.
+    
+    Args:
+    tensors (list of Tensors): The list of input tensors to concatenate.
+    axis (int, optional): The axis along which the tensors will be concatenated. Default is 0.
+    
+    Returns:
+    Tensor: A tensor resulting from concatenating the input tensors along the specified axis.
+    """
+    if not all(isinstance(tensor, gorch.Tensor) for tensor in tensors):
+        raise ValueError("All inputs must be Tensors")
+    
+    values = [tensor.value for tensor in tensors]
+    value = np.concatenate(values, axis=axis)
+    requires_grad = any(tensor.requires_grad for tensor in tensors)
+    out = gorch.Tensor(value, requires_grad=requires_grad)
+    if requires_grad:
+        out._grad_fn = ConcatBackward(tensors, axis)
+    return out
+
 def transpose(tensor: 'Tensor', axes=None) -> 'Tensor':
     """
     Takes a tensor object and returns a transposed tensor.

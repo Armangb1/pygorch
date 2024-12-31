@@ -37,6 +37,7 @@ __all__ = [
     "MinBackward",
     "NormBackward",
     "InverseBackward",
+    "ConcatBackward",
 ]
 
 class AddBackward:
@@ -504,3 +505,14 @@ class InverseBackward:
         inv_x = np.linalg.inv(x.value)
         grad_x = -inv_x.T @ gradient.value @ inv_x.T
         return [gorch.Tensor(grad_x)]
+
+
+class ConcatBackward:
+    def __init__(self, inputs: list, axis: int) -> None:
+        self.input = inputs
+        self.axis = axis
+
+    def backward(self, gradient: 'Tensor') -> list:
+        split_indices = np.cumsum([input.shape[self.axis] for input in self.input[:-1]])
+        grads = np.split(gradient.transpose().value, split_indices, axis=self.axis)
+        return [gorch.Tensor(grad).transpose() for grad in grads]
