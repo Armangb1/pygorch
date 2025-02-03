@@ -38,6 +38,7 @@ __all__ = [
     "NormBackward",
     "InverseBackward",
     "ConcatBackward",
+    "AppendBackward"
 ]
 
 class AddBackward:
@@ -516,3 +517,14 @@ class ConcatBackward:
         split_indices = np.cumsum([input.shape[self.axis] for input in self.input[:-1]])
         grads = np.split(gradient.transpose().value, split_indices, axis=self.axis)
         return [gorch.Tensor(grad).transpose() for grad in grads]
+    
+class AppendBackward:
+    def __init__(self, input: 'Tensor', values: 'Tensor', axis: int) -> None:
+        self.input = [input, values]
+        self.axis = axis
+
+    def backward(self, gradient: 'Tensor') -> list:
+        input, values = self.input
+        grad_input = np.split(gradient.transpose().value, [input.shape[self.axis]], axis=self.axis)[0]
+        grad_values = np.split(gradient.transpose().value, [input.shape[self.axis]], axis=self.axis)[1]
+        return [gorch.Tensor(grad_input.transpose()), gorch.Tensor(grad_values.transpose())]

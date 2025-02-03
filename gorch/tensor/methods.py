@@ -25,6 +25,27 @@ def reshape(tensor: 'Tensor', *new_shape) -> 'Tensor':
         out._grad_fn = ReshapeBackward(tensor, new_shape)
     return out
 
+def append(tensor: 'Tensor', otherTensor: 'Tensor', axis=None) -> 'Tensor':
+    """
+    Appends values to the end of a tensor along the specified axis.
+    
+    Args:
+    tensor (Tensor): The input tensor to which values will be appended.
+    values (array-like): The values to be appended to the tensor.
+    axis (int, optional): The axis along which values will be appended. If None, both tensor and values are flattened before use.
+    
+    Returns:
+    Tensor: A tensor with values appended to the specified axis.
+    """
+    if not isinstance(tensor, gorch.Tensor):
+        raise ValueError("Input must be a Tensor")
+    
+    value = np.append(tensor.value, otherTensor.value, axis=axis)
+    out = gorch.Tensor(value, requires_grad=tensor.requires_grad)
+    if tensor.requires_grad:
+        out._grad_fn = AppendBackward(tensor, otherTensor, axis)
+    return out
+
 def inverse(tensor: 'Tensor') -> 'Tensor':
     """
     Takes a tensor object and returns its inverse.

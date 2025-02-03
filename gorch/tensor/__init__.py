@@ -43,5 +43,6 @@ __all__ = [
     "arange",
     "inverse",
     "concat",
+    "append",
     "Tensor",
 ]
